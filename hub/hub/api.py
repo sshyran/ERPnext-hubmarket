@@ -33,30 +33,30 @@ def unpublish(password):
 def delete(password, item_code):
 	"""Delete item on portal"""
 	hub_user = get_user(password)
-	item = frappe.db.get_value("Hub Item", {"item_code": item_code, "hub_user": hub_user.name})
+	item = frappe.db.get_value("Hub Item", {"item_code": item_code, "hub_user_name": hub_user.name})
 	if item:
 		frappe.delete_doc("Hub Item", item)
 
 @frappe.whitelist(allow_guest=True)
-def sync(password, items, item_list):
+def sync(password, items_to_update, item_list):
 	"""Sync new items"""
 	hub_user = get_user(password)
-	# delete if not in item list
-	all_items = frappe.db.sql_list("select item_code from `tabHub Item` where hub_user=%s", hub_user.name)
+
+	all_items = frappe.db.sql_list("select item_code from `tabHub Item` where hub_user_name=%s", hub_user.name)
 	item_list = json.loads(item_list)
 	for item in all_items:
 		if item not in item_list:
 			frappe.delete_doc("Hub Item", item)
-
+	
 	# insert / update items
-	for item in json.loads(items):
+	for item in json.loads(items_to_update):
 		item_code = frappe.db.get_value("Hub Item",
-			{"hub_user": hub_user.name, "item_code": item.get("item_code")})
+			{"hub_user_name": hub_user.name, "item_code": item.get("item_code")})
 		if item_code:
 			hub_item = frappe.get_doc("Hub Item", item_code)
 		else:
 			hub_item = frappe.new_doc("Hub Item")
-			hub_item.hub_user = hub_user.name
+			hub_item.hub_user_name = hub_user.name
 
 		for key in ("item_code", "item_name", "description", "image", "item_group", "price", "stock_qty", "stock_uom"):
 			hub_item.set(key, item.get(key))
@@ -69,7 +69,7 @@ def sync(password, items, item_list):
 	return frappe._dict({"last_sync_datetime":now()})
 
 @frappe.whitelist(allow_guest=True)
-def get_items(password, text, country=None, start=0, limit=50):
+def get_items(password, text=None, country=None, start=0, limit=50):
 	"""Returns list of items by filters"""
 	get_user(password)
 	or_filters = [
@@ -77,12 +77,12 @@ def get_items(password, text, country=None, start=0, limit=50):
 		{"description": ["like", "%{0}%".format(text)]}
 	]
 	filters = {
-		"published": 1
+		"published": "1"
 	}
 	if country:
 		filters["country"] = country
 	return frappe.get_all("Hub Item", fields=["item_code", "item_name", "description", "image",
-		"hub_user_name", "email", "country", "seller_city"],
+		"hub_user_name", "email", "country", "city"],
 			filters=filters, or_filters=or_filters, limit_start = start, limit_page_length = limit)
 
 def get_user(password):
