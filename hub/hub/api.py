@@ -69,7 +69,7 @@ def sync(password, items_to_update, item_list):
 	return frappe._dict({"last_sync_datetime":now()})
 
 @frappe.whitelist(allow_guest=True)
-def get_items(password, text, country=None, start=0, limit=50):
+def get_items(password, text=None, country=None, start=0, limit=50):
 	"""Returns list of items by filters"""
 	get_user(password)
 	or_filters = [
@@ -77,12 +77,12 @@ def get_items(password, text, country=None, start=0, limit=50):
 		{"description": ["like", "%{0}%".format(text)]}
 	]
 	filters = {
-		"published": 1
+		"published": "1"
 	}
 	if country:
 		filters["country"] = country
 	return frappe.get_all("Hub Item", fields=["item_code", "item_name", "description", "image",
-		"hub_user_name", "email", "country", "seller_city"],
+		"hub_user_name", "email", "country", "city"],
 			filters=filters, or_filters=or_filters, limit_start = start, limit_page_length = limit)
 
 def get_user(password):
