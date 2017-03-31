@@ -81,8 +81,8 @@ def get_items(password, text=None, country=None, start=0, limit=50):
 	}
 	if country:
 		filters["country"] = country
-	return frappe.get_all("Hub Item", fields=["item_code", "item_name", "description", "image",
-		"hub_user_name", "email", "country", "city"],
+	return frappe.get_all("Hub Item", fields=["item_code", "item_name", "description", "item_group", "image", 
+		"price", "stock_qty", "stock_uom", "hub_user_name", "email", "country", "seller_city"],
 			filters=filters, or_filters=or_filters, limit_start = start, limit_page_length = limit)
 
 def get_user(password):
