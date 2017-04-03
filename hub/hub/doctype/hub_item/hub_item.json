@@ -538,7 +538,7 @@
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
-   "fieldname": "city", 
+   "fieldname": "seller_city", 
    "fieldtype": "Read Only", 
    "hidden": 0, 
    "ignore_user_permissions": 0, 
