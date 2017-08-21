@@ -1,0 +1,29 @@
+.result {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.hub-item-wrapper {
+  margin-bottom: 20px;
+}
+.hub-item {
+  border-radius: 3px;
+  border: 1px solid #d1d8dd;
+  width: 200px;
+  height: 200px;
+  padding: 12px;
+}
+.hub-item .img-wrapper {
+  height: 100%;
+  overflow: hidden;
+}
+.hub-item .standard-image {
+  font-size: 72px;
+  border: none;
+  background-color: #fafbfc;
+}
+.hub-item-title {
+  padding-left: 12px;
+  max-width: 200px;
+  width: 100%;
+}

@@ -1,0 +1,36 @@
+@import "../../../../frappe/frappe/public/less/variables.less";
+
+.result {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+}
+
+.hub-item-wrapper {
+	margin-bottom: 20px;
+}
+
+.hub-item {
+	border-radius: 3px;
+	border: 1px solid @border-color;
+	width: 200px;
+	height: 200px;
+	padding: 12px;
+
+	.img-wrapper {
+		height: 100%;
+		overflow: hidden;
+	}
+
+	.standard-image {
+		font-size: 72px;
+		border: none;
+		background-color: @light-bg;
+	}
+}
+
+.hub-item-title {
+	padding-left: 12px;
+	max-width: 200px;
+	width: 100%;
+}

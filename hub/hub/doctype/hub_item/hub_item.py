@@ -4,9 +4,9 @@
 
 from __future__ import unicode_literals
 import frappe, json
-from frappe.model.document import Document
+from frappe.website.website_generator import WebsiteGenerator
 
-class HubItem(Document):
+class HubItem(WebsiteGenerator):
 	def update_item_details(self, item_dict):
 		self.old = None
 		if frappe.db.exists('Hub Item', self.item_code):
@@ -16,3 +16,13 @@ class HubItem(Document):
 			if(new_value != old_value):
 				self.set(field, new_value)
 				frappe.db.set_value("Hub Item", self.name, field, new_value)
+
+	def get_context(self, context):
+		context.no_cache = True
+
+def get_list_context(context):
+	context.allow_guest = True
+	context.no_cache = True
+	context.title = 'Items'
+	context.no_breadcrumbs = True
+	context.order_by = 'creation desc'
