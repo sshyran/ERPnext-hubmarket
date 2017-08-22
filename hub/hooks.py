@@ -22,6 +22,15 @@ app_license = "MIT"
 web_include_css = "/assets/hub/css/hub.css"
 # web_include_js = "/assets/hub/js/hub.js"
 
+website_context = {
+	# "navbar_search": 1,
+	"brand_html": "<img class='navbar-icon' src='/assets/hub/img/hub-logo.png' /><span>ERPNext Hub</span>",
+	"copyright": "ERPNext Hub",
+	"footer_address": "<br>Discover products by ERPNext users",
+	"hide_login": 1,
+	"favicon": "/assets/hub/img/hub-logo.png"
+}
+
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
 
