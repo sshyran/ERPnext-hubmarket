@@ -3,6 +3,7 @@
  "allow_guest_to_view": 0, 
  "allow_import": 0, 
  "allow_rename": 0, 
+ "autoname": "field:category_name", 
  "beta": 0, 
  "creation": "2017-04-20 12:29:31.254374", 
  "custom": 0, 
@@ -13,6 +14,7 @@
  "engine": "InnoDB", 
  "fields": [
   {
+   "allow_bulk_edit": 0, 
    "allow_on_submit": 0, 
    "bold": 0, 
    "collapsible": 0, 
@@ -24,7 +26,7 @@
    "ignore_xss_filter": 0, 
    "in_filter": 0, 
    "in_global_search": 0, 
-   "in_list_view": 0, 
+   "in_list_view": 1, 
    "in_standard_filter": 0, 
    "label": "Category Name", 
    "length": 0, 
@@ -42,6 +44,7 @@
    "unique": 0
   }, 
   {
+   "allow_bulk_edit": 0, 
    "allow_on_submit": 0, 
    "bold": 0, 
    "collapsible": 0, 
@@ -81,7 +84,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2017-04-20 12:36:07.585920", 
+ "modified": "2017-08-22 17:19:59.581764", 
  "modified_by": "Administrator", 
  "module": "Hub", 
  "name": "Hub Category", 

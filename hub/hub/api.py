@@ -3,24 +3,11 @@
 
 import frappe, json, requests, os
 from frappe.utils import now
-from cryptography.fernet import Fernet
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 
-user_config_fields = ["enabled"] #, "public_key_pem"]
+user_config_fields = ["enabled"]
 user_profile_fields = ["hub_user_name", "email", "country"]
 seller_fields = ["company", "seller_website", "seller_city", "seller_description"]
 publishing_fields = ["publish", "publish_pricing", "publish_availability"]
-
-private_files = frappe.get_site_path('private', 'files')
-public_key_path = os.path.join(private_files, "hub_rsa.pub")
-private_key_path = os.path.join(private_files, "hub_rsa")
-
-if os.path.exists(public_key_path):
-	with open(public_key_path, "rb") as public_key_file:
-		hub_public_key_pem = public_key_file.read()
 
 ### Commands
 @frappe.whitelist(allow_guest=True)
@@ -150,54 +137,3 @@ def get_categories(access_token):
 def get_user_details(access_token, user_name):
 	return frappe.get_doc("Hub User", {"hub_user_name": user_name})
 
-
-
-@frappe.whitelist(allow_guest=True)
-def decrypt_message_and_call_method(access_token, method, signature, encrypted_key, message):
-	print type(encrypted_key)
-	print len(encrypted_key)
-	en_key = str(encrypted_key.encode('latin-1'))
-
-	print en_key
-	print len(en_key)
-
-	hub_user = get_user(access_token)
-	user_public_key = load_pem_public_key(
-		str(hub_user.public_key_pem),
-		backend=default_backend()
-	)
-
-	# Verify key
-	user_public_key.verify(
-		signature,
-		str(encrypted_key),
-		padding.PSS(
-			mgf=padding.MGF1(hashes.SHA256()),
-			salt_length=padding.PSS.MAX_LENGTH
-		),
-		hashes.SHA256()
-	)
-
-	# Decrypt key
-	if os.path.exists(private_key_path):
-		with open(private_key_path, "rb") as private_key_file:
-			private_key = serialization.load_pem_private_key(
-				private_key_file.read(),
-				password=None,
-				backend=default_backend()
-			)
-
-	key = private_key.decrypt(
-		en_key,
-		padding.OAEP(
-			mgf=padding.MGF1(algorithm=hashes.SHA1()),
-			algorithm=hashes.SHA1(),
-			label=None
-		)
-	)
-
-	# Decrypt message
-	f = Fernet(key)
-	plaintext = f.decrypt(str(message))
-	args = json.loads(plaintext.decode("utf-8"))
-	getattr(hub_user, method)(args)
