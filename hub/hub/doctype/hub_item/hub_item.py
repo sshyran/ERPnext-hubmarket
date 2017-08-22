@@ -17,6 +17,10 @@ class HubItem(WebsiteGenerator):
 				self.set(field, new_value)
 				frappe.db.set_value("Hub Item", self.name, field, new_value)
 
+	def validate(self):
+		if not self.route:
+			self.route = 'items/' + self.name
+
 	def get_context(self, context):
 		context.no_cache = True
 

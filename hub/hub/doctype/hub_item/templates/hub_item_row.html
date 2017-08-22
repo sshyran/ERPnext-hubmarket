@@ -12,7 +12,11 @@
 		</a>
 	</div>
 	<div class="hub-item-title">
-		<h5 class="bold"><a href="{{ doc.route }}">{{ doc.name }}</a><h5>
+		<h5 class="bold">
+			<a href="{{ doc.route }}">{{ doc.name }}</a>
+		<h5>
+		<a href="{{ doc.route }}">{{ doc.company }}</a>
+		<div>{{ frappe.utils.fmt_money(doc.price) }}</div>
 	</div>
 </div>
 {% endif %}
