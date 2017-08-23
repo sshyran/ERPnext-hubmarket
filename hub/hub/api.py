@@ -37,11 +37,14 @@ def register(args_data):
 
 @frappe.whitelist(allow_guest=True)
 def call_method(access_token, method, message):
-	args = json.loads(message)
-	if args:
-		return globals()[method](access_token, args)
-	else:
-		return globals()[method](access_token)
+	try:
+		args = json.loads(message)
+		if args:
+			return globals()[method](access_token, args)
+		else:
+			return globals()[method](access_token)
+	except:
+		print(frappe.get_traceback())
 
 def unregister(access_token):
 	hub_user = get_user(access_token)
