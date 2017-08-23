@@ -6,5 +6,5 @@ from __future__ import unicode_literals
 import frappe
 import unittest
 
-class TestHubMessage(unittest.TestCase):
+class TestHubOutgoingMessage(unittest.TestCase):
 	pass

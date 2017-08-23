@@ -109,7 +109,7 @@ def delete_item(access_token, args):
 
 # Hub Message
 def enqueue_message(access_token, args):
-	message = frappe.new_doc("Hub Message")
+	message = frappe.new_doc("Hub Outgoing Message")
 
 	message.series = args["message_type"]
 	message.method = args["method"]
