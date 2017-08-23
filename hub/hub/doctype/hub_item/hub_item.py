@@ -13,8 +13,8 @@ class HubItem(WebsiteGenerator):
 
 	def update_item_details(self, item_dict):
 		self.old = None
-		if frappe.db.exists('Hub Item', self.item_code):
-			self.old = frappe.get_doc('Hub Item', self.item_code)
+		if frappe.db.exists('Hub Item', self.name):
+			self.old = frappe.get_doc('Hub Item', self.name)
 		for field, new_value in item_dict.iteritems():
 			old_value = self.old.get(field) if self.old else None
 			if(new_value != old_value):
