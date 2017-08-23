@@ -7,6 +7,10 @@ import frappe, json
 from frappe.website.website_generator import WebsiteGenerator
 
 class HubItem(WebsiteGenerator):
+	website = frappe._dict(
+		page_title_field = "item_name"
+	)
+
 	def update_item_details(self, item_dict):
 		self.old = None
 		if frappe.db.exists('Hub Item', self.item_code):
