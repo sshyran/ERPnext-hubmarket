@@ -85,7 +85,11 @@ class HubUser(Document):
 				hub_item.set(field, None)
 			hub_item.save(ignore_permissions=True)
 
-	def unpublish_items(self):
-		all_items = frappe.db.sql_list("select item_code from `tabHub Item` where hub_user_name=%s", self.name)
-		for item_code in all_items:
-			frappe.delete_doc("Hub Item", item_code, ignore_permissions=True)
+	def unpublish_all_items_of_user(self):
+		for item in frappe.get_all("Hub Item", fields=["name"], filters={ "hub_user_name": self.name}):
+			frappe.db.set_value("Item", item.name, "published", 0)
+
+	def delete_all_items_of_user(self):
+		all_items = frappe.db.sql_list("select name from `tabHub Item` where hub_user_name=%s", self.name)
+		for name in all_items:
+			frappe.delete_doc("Hub Item", name, ignore_permissions=True)

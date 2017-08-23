@@ -46,9 +46,10 @@ def call_method(access_token, method, message):
 	except:
 		print(frappe.get_traceback())
 
+# Hub User API
 def unregister(access_token):
 	hub_user = get_user(access_token)
-	unpublish_items(access_token)
+	hub_user.delete_all_items_of_user()
 	# delete user company
 	company_name = frappe.get_all('Hub Company', filters={"hub_user_name": hub_user.name})[0]["name"]
 	frappe.delete_doc('Hub Company', company_name, ignore_permissions=True)
@@ -74,10 +75,15 @@ def remove_item_fields(access_token, args):
 	hub_user = get_user(access_token)
 	return hub_user.remove_item_fields(args)
 
-def unpublish_items(access_token):
+def unpublish_all_items_of_user(access_token):
 	hub_user = get_user(access_token)
-	return hub_user.unpublish_items()
+	return hub_user.unpublish_all_items_of_user()
 
+def delete_all_items_of_user(access_token):
+	hub_user = get_user(access_token)
+	return hub_user.delete_all_items_of_user()
+
+# Hub Item API
 def update_item(access_token, args):
 	hub_user = get_user(access_token)
 	item_code = args["item_code"]
