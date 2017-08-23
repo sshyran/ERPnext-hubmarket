@@ -43,7 +43,7 @@ class HubUser(Document):
 				frappe.delete_doc("Hub Item", item, ignore_permissions=True)
 
 		item_fields = args["item_fields"]
-		hub_user_fields = ["hub_user_name", "email", "country", "seller_city", "company", "seller_website"]
+		hub_user_fields = ["hub_user_name", "hub_user_email", "country", "seller_city", "company", "site_name"]
 
 		# insert / update items
 		for item in json.loads(args["items_to_update"]):
