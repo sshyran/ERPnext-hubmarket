@@ -11,12 +11,12 @@ from frappe.model.document import Document
 class HubOutgoingMessage(Document):
 	def autoname(self):
 		self.name = "OUT-" + self.type + '-' + re.sub('[^A-Za-z0-9]+', '-',
-			get_datetime_str(datetime.now())[:-7])
+			get_datetime_str(datetime.now())[:-4])
 
 	def on_update(self):
-		enqueue_message(self.receiver_site, self.method, self.arguments, self.name)
+		enqueue_message(self.receiver_site, self.method, self.name, self.arguments)
 
-def enqueue_message(receiver_site, method, message, message_id, now=False):
+def enqueue_message(receiver_site, method, message_id, message="", now=False):
 	if now:
 		return send_message_to_hub_client(receiver_site, method, message, message_id)
 	try:

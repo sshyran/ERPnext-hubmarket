@@ -116,6 +116,12 @@ website_context = {
 # 	]
 # }
 
+scheduler_events = {
+	"daily": [
+		"hub.hub.doctype.hub_user.hub_user.check_last_sync_datetimes"
+	],
+}
+
 # Testing
 # -------
 

@@ -2,7 +2,7 @@
 # For license information, please see license.txt
 
 import frappe, json, requests, os
-from frappe.utils import now
+from frappe.utils import now, add_years
 
 user_config_fields = ["enabled"]
 user_profile_fields = ["hub_user_name", "hub_user_email", "country"]
@@ -20,6 +20,7 @@ def register(args_data):
 	"""Register on the hub."""
 	args = json.loads(args_data)
 	if frappe.get_all("Hub User", filters = {"hub_user_email": args["hub_user_email"]}):
+		# Renabling user
 		return
 
 	hub_user = frappe.new_doc("Hub User")
@@ -34,6 +35,7 @@ def register(args_data):
 
 	# set created company link for user
 	hub_user.set("company", args["company"])
+	hub_user.last_sync_datetime = add_years(now(), -10)
 	hub_user.save(ignore_permissions=True)
 
 	response = hub_user.as_dict()
@@ -52,21 +54,9 @@ def call_method(access_token, method, message):
 		print(frappe.get_traceback())
 
 # Hub User API
-def unregister(access_token):
-	hub_user = get_user(access_token)
-	hub_user.delete_all_items_of_user()
-	# delete user company
-	company_name = frappe.get_all('Hub Company', filters={"hub_user_name": hub_user.name})[0]["name"]
-	frappe.delete_doc('Hub Company', company_name, ignore_permissions=True)
-
-	# TODO: Delete all of user's transactions
-
-	# Delete user
-	frappe.delete_doc('Hub User', hub_user.name, ignore_permissions=True)
-
 def update_user_details(access_token, args):
 	hub_user = get_user(access_token)
-	return hub_user.update_user_details(args)
+	return hub_user.update_details(args)
 
 def update_items(access_token, args):
 	hub_user = get_user(access_token)
@@ -78,11 +68,15 @@ def update_item_fields(access_token, args):
 
 def unpublish_all_items_of_user(access_token):
 	hub_user = get_user(access_token)
-	return hub_user.unpublish_all_items_of_user()
+	return hub_user.unpublish_all_items()
 
 def delete_all_items_of_user(access_token):
 	hub_user = get_user(access_token)
-	return hub_user.delete_all_items_of_user()
+	return hub_user.delete_all_items()
+
+def unregister_user(access_token):
+	hub_user = get_user(access_token)
+	return hub_user.unregister()
 
 # Hub Item API
 def update_item(access_token, args):
@@ -112,7 +106,7 @@ def delete_item(access_token, args):
 def enqueue_message(access_token, args):
 	message = frappe.new_doc("Hub Outgoing Message")
 
-	message.series = args["message_type"]
+	message.type = args["message_type"]
 	message.method = args["method"]
 	message.arguments = args["arguments"]
 
@@ -120,7 +114,7 @@ def enqueue_message(access_token, args):
 	message.receiver_site = receiver_user.site_name
 
 	message.save(ignore_permissions=True)
-	return "Success"
+	return 1
 
 ### Queries
 def get_items(access_token, args):
