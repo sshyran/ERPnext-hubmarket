@@ -9,6 +9,11 @@ user_profile_fields = ["hub_user_name", "hub_user_email", "country"]
 seller_fields = ["company", "site_name", "seller_city", "seller_description"]
 publishing_fields = ["publish", "publish_pricing", "publish_availability"]
 
+base_fields_for_items = ["item_code", "item_name", "item_group", "description",
+	"image", "stock_uom"]
+
+item_fields_to_update = ["price", "currency", "stock_qty"]
+
 ### Commands
 @frappe.whitelist(allow_guest=True)
 def register(args_data):
@@ -67,13 +72,9 @@ def update_items(access_token, args):
 	hub_user = get_user(access_token)
 	return hub_user.update_items(args)
 
-def add_item_fields(access_token, args):
+def update_item_fields(access_token, args):
 	hub_user = get_user(access_token)
-	return hub_user.add_item_fields(args)
-
-def remove_item_fields(access_token, args):
-	hub_user = get_user(access_token)
-	return hub_user.remove_item_fields(args)
+	return hub_user.update_item_fields(args)
 
 def unpublish_all_items_of_user(access_token):
 	hub_user = get_user(access_token)
@@ -109,7 +110,7 @@ def delete_item(access_token, args):
 
 # Hub Message
 def enqueue_message(access_token, args):
-	message = frappe.new_doc("Hub Message")
+	message = frappe.new_doc("Hub Outgoing Message")
 
 	message.series = args["message_type"]
 	message.method = args["method"]
@@ -125,7 +126,7 @@ def enqueue_message(access_token, args):
 def get_items(access_token, args):
 	"""Returns list of items by filters"""
 	# args["text"]=None, args["category"]=None, args["company"]=None, args["country"]=None, args["start"]=0, args["limit"]=50
-	get_user(access_token)
+	hub_user = get_user(access_token)
 	or_filters = [
 		{"item_name": ["like", "%{0}%".format(args["text"])]},
 		{"description": ["like", "%{0}%".format(args["text"])]}
@@ -139,9 +140,15 @@ def get_items(access_token, args):
 		filters["company"] = args["company"]
 	if args["country"]:
 		filters["country"] = args["country"]
-	return frappe.get_all("Hub Item", fields=["item_code", "item_name", "item_group", "description", "image",
-		"hub_user_name", "hub_user_email", "country", "seller_city", "company", "site_name", "standard_rate"],
-			filters=filters, or_filters=or_filters, limit_start = args["start"], limit_page_length = args["limit"])
+
+	fields = base_fields_for_items + user_profile_fields + ["company", "site_name", "seller_city"]
+
+	if hub_user.publish_pricing:
+		fields += ["price", "currency"]
+	if hub_user.publish_availability:
+		fields += ["stock_qty"]
+	return frappe.get_all("Hub Item", fields=fields, filters=filters, or_filters=or_filters,
+		limit_start = args["start"], limit_page_length = args["limit"])
 
 def get_all_companies(access_token):
 	all_company_fields = ["company", "hub_user_name", "country", "seller_city", "site_name", "seller_description"]

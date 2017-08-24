@@ -65,24 +65,15 @@ class HubUser(Document):
 			hub_item.save(ignore_permissions=True)
 		return frappe._dict({"last_sync_datetime":now()})
 
-	def add_item_fields(self, args):
-		items_with_new_fields = json.loads(args["items_with_new_fields"])
-		fields_to_add = args["fields_to_add"]
-		for item in items_with_new_fields:
+	def update_item_fields(self, args):
+		items_with_fields_updates = json.loads(args["items_with_fields_updates"])
+		fields_to_update = args["fields_to_update"]
+		for item in items_with_fields_updates:
 			item_code = frappe.db.get_value("Hub Item",
 				{"hub_user_name": self.name, "item_code": item.get("item_code")})
 			hub_item = frappe.get_doc("Hub Item", item_code)
-			for field in fields_to_add:
+			for field in fields_to_update:
 				hub_item.set(field, item.get(field))
-			hub_item.save(ignore_permissions=True)
-
-	def remove_item_fields(self, args):
-		fields_to_remove = args["fields_to_remove"]
-		all_items = frappe.db.sql_list("select item_code from `tabHub Item` where hub_user_name=%s", self.name)
-		for item_code in all_items:
-			hub_item = frappe.get_doc("Hub Item", item_code)
-			for field in fields_to_remove:
-				hub_item.set(field, None)
 			hub_item.save(ignore_permissions=True)
 
 	def unpublish_all_items_of_user(self):
