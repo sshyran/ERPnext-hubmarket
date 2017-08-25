@@ -1,7 +1,29 @@
 {% extends "templates/web.html" %}
+{% from 'templates/macros.html' import image_frame %}
 
 {% block page_content %}
-<h1>{{ title }}</h1>
+<div class="hub-item">
+	<div class="hub-item-image">
+		{{ image_frame(src=image, title=title) }}
+	</div>
+	<div class="hub-item-details">
+		<div class="hub-item-title">
+			<h1>{{ title }}</h1>
+			<p class="lead">{{ frappe.utils.fmt_money(price, currency=doc.currency) }}</p>
+			<p>
+			{%- if stock_qty -%}
+			{{ _('Stock:') }} {{ stock_qty }}
+			{%- else -%}
+			{{ _('Not Available') }}
+			{%- endif -%}
+			</p>
+		</div>
+		<div class="hub-item-description">
+			<p class="text-muted uppercase">{{ _('Description') }}</p>
+			{{ description }}
+		</div>
+	</div>
+</div>
 {% endblock %}
 
 <!-- this is a sample default web page template -->
