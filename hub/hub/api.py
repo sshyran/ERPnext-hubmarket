@@ -23,6 +23,8 @@ def register(args_data):
 		# Renabling user
 		return
 
+	# weagsdvkebarndf
+
 	hub_user = frappe.new_doc("Hub User")
 	for key in user_profile_fields + user_config_fields + ["site_name", "seller_city", "seller_description"]:
 		hub_user.set(key, args[key])
@@ -35,6 +37,7 @@ def register(args_data):
 
 	# set created company link for user
 	hub_user.set("company", args["company"])
+	hub_user.enabled = 1
 	hub_user.last_sync_datetime = add_years(now(), -10)
 	hub_user.save(ignore_permissions=True)
 
@@ -115,6 +118,10 @@ def enqueue_message(access_token, args):
 
 	message.save(ignore_permissions=True)
 	return 1
+
+def get_message_status(access_token, args):
+	msg_doc = frappe.get_doc("Hub Outgoing Message", {"name": args["message_id"]})
+	return msg_doc.status
 
 ### Queries
 def get_items(access_token, args):

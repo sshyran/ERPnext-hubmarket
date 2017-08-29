@@ -44,7 +44,8 @@ class HubUser(Document):
 
 		# TODO: delete messages
 		frappe.delete_doc('Hub User', self.name, ignore_permissions=True)
-		return 1
+		now_time = now()
+		return frappe._dict({"last_sync_datetime":now_time})
 
 	def update_items(self, args):
 		"""Update items"""
