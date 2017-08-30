@@ -45,16 +45,31 @@ def register(args_data):
 	return response
 
 @frappe.whitelist(allow_guest=True)
-def call_method(access_token, method, message):
-	try:
+def call_method(access_token, method, message, debug = False):
+	if not debug:
 		args = json.loads(message)
 		if args:
-			return globals()[method](access_token, args)
+			result = globals()[method](access_token, args) or {}
 		else:
-			return globals()[method](access_token)
-	except:
-		print("Server Exception")
-		print(frappe.get_traceback())
+			result = globals()[method](access_token) or {}
+		now_time = now()
+		response = {"last_sync_datetime": now_time}
+		response.update(result)
+		return frappe._dict(response)
+	else:
+		try:
+			args = json.loads(message)
+			if args:
+				result = globals()[method](access_token, args) or {}
+			else:
+				result = globals()[method](access_token) or {}
+			now_time = now()
+			response = {"last_sync_datetime": now_time}
+			response.update(result)
+			return frappe._dict(response)
+		except:
+			print("Server Exception")
+			print(frappe.get_traceback())
 
 # Hub User API
 def update_user_details(access_token, args):
@@ -115,6 +130,7 @@ def enqueue_message(access_token, args):
 
 	receiver_user = frappe.get_doc("Hub User", {"hub_user_email": args["receiver_email"]})
 	message.receiver_site = receiver_user.site_name
+	message.now = args["method"] or 0
 
 	message.save(ignore_permissions=True)
 	return 1

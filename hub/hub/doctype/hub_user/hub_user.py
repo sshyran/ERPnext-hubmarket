@@ -19,6 +19,7 @@ class HubUser(Document):
 			if(new_value != old_value):
 				self.set(key, new_value)
 				frappe.db.set_value("Hub User", self.name, key, new_value)
+		return {}
 
 	def delete_item(self, item_code):
 		"""Delete item on portal"""
@@ -44,8 +45,7 @@ class HubUser(Document):
 
 		# TODO: delete messages
 		frappe.delete_doc('Hub User', self.name, ignore_permissions=True)
-		now_time = now()
-		return frappe._dict({"last_sync_datetime":now_time})
+		return {}
 
 	def update_items(self, args):
 		"""Update items"""
@@ -59,7 +59,8 @@ class HubUser(Document):
 		hub_user_fields = ["hub_user_name", "hub_user_email", "country", "seller_city", "company", "site_name"]
 
 		# insert / update items
-		for item in json.loads(args["items_to_update"]):
+		items = json.loads(args["items_to_update"])
+		for item in items:
 			item_code = frappe.db.get_value("Hub Item",
 				{"hub_user_name": self.name, "item_code": item.get("item_code")})
 			if item_code:
@@ -80,11 +81,13 @@ class HubUser(Document):
 		now_time = now()
 		self.last_sync_datetime = now_time
 		self.save(ignore_permissions=True)
-		return frappe._dict({"last_sync_datetime":now_time})
+		return {"total_items": len(items)}
+		# return frappe._dict({"last_sync_datetime":now_time, "total_items": len(items)})
 
 	def update_item_fields(self, args):
 		items_with_fields_updates = json.loads(args["items_with_fields_updates"])
-		fields_to_update = args["fields_to_update"]
+		fields_to_update = json.loads(args["fields_to_update"])
+		print(fields_to_update)
 		for item in items_with_fields_updates:
 			item_code = frappe.db.get_value("Hub Item",
 				{"hub_user_name": self.name, "item_code": item.get("item_code")})
@@ -96,7 +99,7 @@ class HubUser(Document):
 		now_time = now()
 		self.last_sync_datetime = now_time
 		self.save(ignore_permissions=True)
-		return frappe._dict({"last_sync_datetime":now_time})
+		return {"total_items": len(items_with_fields_updates)}
 
 	def disable_all_items(self):
 		for item in frappe.get_all("Hub Item", fields=["name"], filters={ "hub_user_name": self.name}):
@@ -110,6 +113,7 @@ class HubUser(Document):
 		all_items = frappe.db.sql_list("select name from `tabHub Item` where hub_user_name=%s", self.name)
 		for name in all_items:
 			frappe.delete_doc("Hub Item", name, ignore_permissions=True)
+		return {"total_items": len(all_items)}
 
 def check_last_sync_datetime():
 	users = frappe.db.get_all("Hub User", fields=["name", "access_token", "last_sync_datetime"], filters={"enabled": 1})
