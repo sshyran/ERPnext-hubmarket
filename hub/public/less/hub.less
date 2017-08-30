@@ -15,16 +15,25 @@
 	margin-bottom: 20px;
 }
 
-.hub-item {
-	border-radius: 3px;
+.img-wrapper {
 	border: 1px solid @border-color;
-	width: 200px;
-	height: 200px;
+	border-radius: 3px;
 	padding: 12px;
+	overflow: hidden;
+	text-align: center;
+	white-space: nowrap;
 
-	.img-wrapper {
+	img {
+		max-width: 100%;
+		max-height: 100%;
+		display: inline-block;
+		vertical-align: middle;
+	}
+
+	.helper {
 		height: 100%;
-		overflow: hidden;
+		display: inline-block;
+		vertical-align: middle;
 	}
 
 	.standard-image {
@@ -35,6 +44,15 @@
 }
 
 .hub-item-title {
-	max-width: 200px;
 	width: 100%;
+}
+
+// hub item details view
+.hub-item {
+	display: flex;
+}
+.hub-item-details {
+	margin-left: 12px;
+	display: flex;
+	flex-direction: column;
 }

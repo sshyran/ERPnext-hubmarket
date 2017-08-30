@@ -1,0 +1,10 @@
+{% macro image_frame(src, title, height='200px', width=height) -%}
+<div class="img-wrapper" style="height: {{ height }}; width: {{ width }}">
+{% if src %}
+<img src="{{ src }}">
+<span class="helper"></span>
+{% else %}
+<div class="standard-image">{{ title[0] }}</div>
+{% endif %}
+</div>
+{%- endmacro %}
