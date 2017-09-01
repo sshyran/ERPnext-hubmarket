@@ -152,7 +152,7 @@ def get_items(access_token, args):
 		"published": "1"
 	}
 	if args["category"]:
-		filters["item_group"] = args["category"]
+		filters["hub_category"] = args["category"]
 	if args["company"]:
 		filters["company"] = args["company"]
 	if args["country"]:
@@ -174,7 +174,16 @@ def get_all_companies(access_token):
 	return {"companies": companies}
 
 def get_categories(access_token):
-	categories = frappe.get_all("Hub Category", fields=["category_name"])
+	# categories = frappe.get_all("Hub Category", fields=["category_name"])
+
+	lft, rgt = frappe.db.get_value('Hub Category', {'name': 'All Categories'}, ['lft', 'rgt'])
+	categories = frappe.db.sql('''
+		select
+			hub_category_name from `tabHub Category`
+		where
+			lft >= {lft} and
+			rgt <= {rgt}
+	'''.format(lft=lft, rgt=rgt), as_dict=1)
 	return {"categories": categories}
 
 def get_all_users(access_token):
