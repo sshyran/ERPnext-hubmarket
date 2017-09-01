@@ -161,24 +161,28 @@ def get_items(access_token, args):
 	fields = base_fields_for_items + user_profile_fields + ["company", "site_name", "seller_city"]
 
 	if hub_user.publish_pricing:
-		fields += ["price", "currency"]
+		fields += ["price", "currency", "formatted_price"]
 	if hub_user.publish_availability:
 		fields += ["stock_qty"]
-	return frappe.get_all("Hub Item", fields=fields, filters=filters, or_filters=or_filters,
+	items = frappe.get_all("Hub Item", fields=fields, filters=filters, or_filters=or_filters,
 		limit_start = args["start"], limit_page_length = args["limit"])
+	return {"items": items}
 
 def get_all_companies(access_token):
 	all_company_fields = ["company", "hub_user_name", "country", "seller_city", "site_name", "seller_description"]
-	return frappe.get_all("Hub Company", fields=all_company_fields)
+	companies = frappe.get_all("Hub Company", fields=all_company_fields)
+	return {"companies": companies}
+
+def get_categories(access_token):
+	categories = frappe.get_all("Hub Category", fields=["category_name"])
+	return {"categories": categories}
+
+def get_all_users(access_token):
+	users = frappe.get_all("Hub User", fields=["hub_user_name", "country"])
+	return {"users": users}
 
 def get_user(access_token):
 	return frappe.get_doc("Hub User", {"access_token": access_token})
-
-def get_all_users(access_token):
-	return frappe.get_all("Hub User", fields=["hub_user_name", "country"])
-
-def get_categories(access_token):
-	return frappe.get_all("Hub Category", fields=["category_name"])
 
 def get_user_details(access_token, user_name):
 	return frappe.get_doc("Hub User", {"hub_user_name": user_name})
