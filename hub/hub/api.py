@@ -161,6 +161,10 @@ def get_items(access_token, args):
 	if args["country"]:
 		filters["country"] = args["country"]
 
+	order_by = ''
+	if args["order_by"]:
+		order_by = args["order_by"]
+
 	fields = response_item_fields + user_profile_fields + ["company_id", "company_name", "site_name", "seller_city"]
 
 	if hub_user.publish_pricing:
@@ -168,7 +172,7 @@ def get_items(access_token, args):
 	if hub_user.publish_availability:
 		fields += ["stock_qty"]
 	items = frappe.get_all("Hub Item", fields=fields, filters=filters, or_filters=or_filters,
-		limit_start = args["start"], limit_page_length = args["limit"])
+		limit_start = args["start"], limit_page_length = args["limit"], order_by=order_by)
 
 	return {"items": items}
 

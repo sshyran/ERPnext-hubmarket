@@ -37,6 +37,12 @@ class HubUser(Document):
 		self.disable_all_items()
 		self.enabled = 0
 
+	def clear_items_pricing_info(self):
+		pass
+
+	def clear_items_stock_info(self):
+		pass
+
 	def unregister(self):
 		"""Unregister user"""
 		self.delete_all_items()
