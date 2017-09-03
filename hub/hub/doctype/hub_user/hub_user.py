@@ -56,7 +56,7 @@ class HubUser(Document):
 				frappe.delete_doc("Hub Item", item, ignore_permissions=True)
 
 		item_fields = args["item_fields"]
-		hub_user_fields = ["hub_user_name", "hub_user_email", "country", "seller_city", "company", "site_name"]
+		hub_user_fields = ["hub_user_name", "hub_user_email", "country", "seller_city", "company_name", "site_name"]
 
 		# insert / update items
 		items = json.loads(args["items_to_update"])
@@ -71,6 +71,8 @@ class HubUser(Document):
 
 			for key in item_fields:
 				hub_item.set(key, item.get(key))
+
+			hub_item.company_id = frappe.db.get_value("Hub Company", self.company_name, "name")
 
 			for key in hub_user_fields:
 				hub_item.set(key, self.get(key))

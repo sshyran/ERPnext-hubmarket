@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe, json
 from frappe.website.website_generator import WebsiteGenerator
-from frappe.utils import cint
+from hub.hub.utils import autoname_increment_by_field
 
 class HubItem(WebsiteGenerator):
 	website = frappe._dict(
@@ -14,7 +14,7 @@ class HubItem(WebsiteGenerator):
 
 	def autoname(self):
 		super(HubItem, self).autoname()
-		self.name = autoname_increment(self.doctype, self.name)
+		self.name = autoname_increment_by_field(self.doctype, "item_code", self.name)
 
 	def update_item_details(self, item_dict):
 		self.old = None
@@ -39,10 +39,3 @@ def get_list_context(context):
 	context.title = 'Items'
 	context.no_breadcrumbs = True
 	context.order_by = 'creation desc'
-
-def autoname_increment(doctype, name):
-	count = frappe.db.count(doctype, name)
-	if cint(count):
-		return '{0}-{1}'.format(name, count)
-	else:
-		return name

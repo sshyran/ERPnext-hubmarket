@@ -5,6 +5,11 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
+from hub.hub.utils import autoname_increment_by_field
 
 class HubCompany(Document):
-	pass
+	def autoname(self):
+		# super(HubCompany, self).autoname()
+		# self.name = autoname_increment_by_field(self.doctype, "company_name", self.name)
+		self.name = autoname_increment_by_field(self.doctype, "company_name", self.company_name)
+
