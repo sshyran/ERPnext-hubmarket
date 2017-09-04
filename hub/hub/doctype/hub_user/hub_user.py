@@ -46,12 +46,16 @@ class HubUser(Document):
 	def unregister(self):
 		"""Unregister user"""
 		self.delete_all_items()
-		company_name = frappe.get_all('Hub Company', filters={"hub_user_name": self.name})[0]["name"]
-		frappe.delete_doc('Hub Company', company_name, ignore_permissions=True)
-
+		self.delete_company()
 		# TODO: delete messages
 		frappe.delete_doc('Hub User', self.name, ignore_permissions=True)
 		return {}
+
+	def delete_company(self):
+		company_name = frappe.get_all('Hub Company', filters={"hub_user_name": self.name})[0]["name"]
+		frappe.db.set_value("Hub User", self.name, "company_name", None)
+		frappe.db.set_value("Hub Company", company_name, "hub_user_name", None)
+		frappe.delete_doc('Hub Company', company_name, ignore_permissions=True)
 
 	def update_items(self, args):
 		"""Update items"""
