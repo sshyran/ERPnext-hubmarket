@@ -37,15 +37,25 @@ class HubUser(Document):
 		self.disable_all_items()
 		self.enabled = 0
 
+	def clear_items_pricing_info(self):
+		pass
+
+	def clear_items_stock_info(self):
+		pass
+
 	def unregister(self):
 		"""Unregister user"""
 		self.delete_all_items()
-		company_name = frappe.get_all('Hub Company', filters={"hub_user_name": self.name})[0]["name"]
-		frappe.delete_doc('Hub Company', company_name, ignore_permissions=True)
-
+		self.delete_company()
 		# TODO: delete messages
 		frappe.delete_doc('Hub User', self.name, ignore_permissions=True)
 		return {}
+
+	def delete_company(self):
+		company_name = frappe.get_all('Hub Company', filters={"hub_user_name": self.name})[0]["name"]
+		frappe.db.set_value("Hub User", self.name, "company_name", None)
+		frappe.db.set_value("Hub Company", company_name, "hub_user_name", None)
+		frappe.delete_doc('Hub Company', company_name, ignore_permissions=True)
 
 	def update_items(self, args):
 		"""Update items"""
@@ -56,7 +66,7 @@ class HubUser(Document):
 				frappe.delete_doc("Hub Item", item, ignore_permissions=True)
 
 		item_fields = args["item_fields"]
-		hub_user_fields = ["hub_user_name", "hub_user_email", "country", "seller_city", "company", "site_name"]
+		hub_user_fields = ["hub_user_name", "hub_user_email", "country", "seller_city", "company_name", "site_name"]
 
 		# insert / update items
 		items = json.loads(args["items_to_update"])
@@ -71,6 +81,8 @@ class HubUser(Document):
 
 			for key in item_fields:
 				hub_item.set(key, item.get(key))
+
+			hub_item.company_id = frappe.db.get_value("Hub Company", self.company_name, "name")
 
 			for key in hub_user_fields:
 				hub_item.set(key, self.get(key))
