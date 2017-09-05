@@ -136,26 +136,45 @@ def enqueue_message(access_token, args):
 	message.now = args["method"] or 0
 
 	message.save(ignore_permissions=True)
-	return 1
+	return {}
 
 def get_message_status(access_token, args):
 	msg_doc = frappe.get_doc("Hub Outgoing Message", {"name": args["message_id"]})
-	return msg_doc.status
+	return {"message_status": msg_doc.status}
 
 ### Queries
 def get_items(access_token, args):
 	"""Returns list of items by filters"""
 	# args["text"]=None, args["category"]=None, args["company"]=None, args["country"]=None, args["start"]=0, args["limit"]=50
 	hub_user = get_user(access_token)
+	fields = response_item_fields + user_profile_fields + ["company_id", "company_name", "site_name", "seller_city"]
+	filters = {
+		"published": "1",
+		"hub_user_email": ["!=", hub_user.hub_user_email]
+	}
+
+	if hub_user.publish_pricing:
+		fields += ["price", "currency", "formatted_price"]
+	if hub_user.publish_availability:
+		fields += ["stock_qty"]
+
+	if args["item_codes"]:
+		item_codes = args["item_codes"]
+		items = []
+		for d in item_codes:
+			item_code = d[4:]
+			f = filters
+			f["item_code"] = item_code
+			items.append(frappe.get_all("Hub Item", fields=fields, filters=f)[0])
+		return {"items": items}
+
 	or_filters = [
 		{"item_name": ["like", "%{0}%".format(args["text"])]},
 		{"description": ["like", "%{0}%".format(args["text"])]}
 	]
-	filters = {
-		"published": "1"
-	}
-	if args["category"]:
-		filters["item_group"] = args["category"]
+
+	# if args["hub_category"]:
+	# 	filters["hub_category"] = args["hub_category"]
 	if args["company_name"]:
 		filters["company_name"] = args["company_name"]
 	if args["country"]:
@@ -165,12 +184,6 @@ def get_items(access_token, args):
 	if args["order_by"]:
 		order_by = args["order_by"]
 
-	fields = response_item_fields + user_profile_fields + ["company_id", "company_name", "site_name", "seller_city"]
-
-	if hub_user.publish_pricing:
-		fields += ["price", "currency", "formatted_price"]
-	if hub_user.publish_availability:
-		fields += ["stock_qty"]
 	items = frappe.get_all("Hub Item", fields=fields, filters=filters, or_filters=or_filters,
 		limit_start = args["start"], limit_page_length = args["limit"], order_by=order_by)
 
