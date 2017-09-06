@@ -1,11 +1,9 @@
 # Copyright (c) 2015, Web Notes Technologies Pvt. Ltd. and Contributors and contributors
 # For license information, please see license.txt
 
-import frappe, json, requests, os
+import frappe, json
 from frappe.utils import now, add_years
 
-user_config_fields = ["enabled"]
-user_profile_fields = ["hub_user_name", "hub_user_email", "country"]
 seller_fields = ["site_name", "seller_city", "seller_description"]
 publishing_fields = ["publish", "publish_pricing", "publish_availability"]
 
@@ -19,27 +17,27 @@ item_fields_to_update = ["price", "currency", "stock_qty"]
 def register(args_data):
 	"""Register on the hub."""
 	try:
-		args = json.loads(args_data)
-		if frappe.get_all("Hub User", filters = {"hub_user_email": args["hub_user_email"]}):
-			# Renabling user
-			return
+		args = frappe._dict(json.loads(args_data))
+		if not frappe.db.exists('Hub User', args.hub_user):
+			hub_user = make_hub_user(args)
+		else:
+			hub_user = frappe.get_doc('Hub User', args.hub_user)
+			# re-register?
 
-		hub_company = frappe.new_doc("Hub Company")
+		hub_company_name = frappe.db.get_value('Hub Company',
+			dict(hub_user=hub_user.name, company_name=args.company))
+
+		if hub_company_name:
+			hub_company = frappe.get_doc('Hub Company', hub_company_name)
+		else:
+			hub_company = frappe.new_doc("Hub Company")
+
 		hub_company.company_name = args["company"]
 		for key in ["country"] + seller_fields:
 			hub_company.set(key, args[key])
-		hub_company.insert(ignore_permissions=True)
-
-		hub_user = frappe.new_doc("Hub User")
-		for key in user_profile_fields + seller_fields:
-			hub_user.set(key, args[key])
-		hub_user.set("company_name", args["company"])
-		hub_user.enabled = 1
-		hub_user.last_sync_datetime = add_years(now(), -10)
-		hub_user.insert(ignore_permissions=True)
 
 		# set created user link for company
-		hub_company.hub_user_name = args["hub_user_name"]
+		hub_company.hub_user = args["hub_user"]
 		hub_company.save(ignore_permissions=True)
 
 		response = hub_user.as_dict()
@@ -49,30 +47,16 @@ def register(args_data):
 		print("Server Exception")
 		print(frappe.get_traceback())
 
-@frappe.whitelist(allow_guest=True)
-def dispatch_request(access_token, method, message, debug = False):
-	if not get_user(access_token):
-		return
+def make_hub_user(args):
+	hub_user = frappe.new_doc("Hub User")
+	hub_user.hub_user_name = args.get('hub_user')
+	for key in ['country'] + seller_fields:
+		hub_user.set(key, args[key])
+	hub_user.enabled = 1
+	hub_user.last_sync_datetime = add_years(now(), -10)
+	hub_user.insert(ignore_permissions=True)
+	return hub_user
 
-	if not debug:
-		return call_method(access_token, method, message)
-	else:
-		try:
-			return call_method(access_token, method, message)
-		except:
-			print("Server Exception")
-			print(frappe.get_traceback())
-
-def call_method(access_token, method, message):
-	args = json.loads(message)
-	if args:
-		result = globals()[method](access_token, args) or {}
-	else:
-		result = globals()[method](access_token) or {}
-	now_time = now()
-	response = {"last_sync_datetime": now_time}
-	response.update(result)
-	return frappe._dict(response)
 
 # Hub User API
 def update_user_details(access_token, args):
@@ -104,7 +88,7 @@ def update_item(access_token, args):
 	hub_user = get_user(access_token)
 	item_code = args["item_code"]
 	item_dict = json.loads(args["item_dict"])
-	item = frappe.get_doc("Hub Item", {"hub_user_name": hub_user.name, "item_code":item_code})
+	item = frappe.get_doc("Hub Item", {"hub_user": hub_user.name, "item_code":item_code})
 	return item.update_item_details(item_dict)
 
 def insert_item(access_token, args):
@@ -112,7 +96,7 @@ def insert_item(access_token, args):
 	item = frappe.new_doc("Hub Item")
 	item_dict = json.loads(args["item_dict"])
 	item.update_item_details(item_dict)
-	for key in user_profile_fields + ["site_name", "seller_city"]:
+	for key in ['hub_user', 'country', "site_name", "seller_city"]:
 		item.set(key, hub_user.get(key))
 	item.published = 1
 	item.save(ignore_permissions=True)
@@ -120,7 +104,7 @@ def insert_item(access_token, args):
 def delete_item(access_token, args):
 	hub_user = get_user(access_token)
 	item_code = args["item_code"]
-	item = frappe.get_doc("Hub Item", {"hub_user_name": hub_user.name, "item_code":item_code})
+	item = frappe.get_doc("Hub Item", {"hub_user": hub_user.name, "item_code":item_code})
 	frappe.delete_doc('Hub Item', item.name, ignore_permissions=True)
 
 # Hub Message
@@ -131,7 +115,7 @@ def enqueue_message(access_token, args):
 	message.method = args["method"]
 	message.arguments = args["arguments"]
 
-	receiver_user = frappe.get_doc("Hub User", {"hub_user_email": args["receiver_email"]})
+	receiver_user = frappe.get_doc("Hub User", {"hub_user": args["receiver_email"]})
 	message.receiver_site = receiver_user.site_name
 	message.now = args["method"] or 0
 
@@ -147,10 +131,10 @@ def get_items(access_token, args):
 	"""Returns list of items by filters"""
 	# args["text"]=None, args["category"]=None, args["company"]=None, args["country"]=None, args["start"]=0, args["limit"]=50
 	hub_user = get_user(access_token)
-	fields = response_item_fields + user_profile_fields + ["company_id", "company_name", "site_name", "seller_city"]
+	fields = response_item_fields + ['hub_user', 'country', "company_id", "company_name", "site_name", "seller_city"]
 	filters = {
 		"published": "1",
-		"hub_user_email": ["!=", hub_user.hub_user_email]
+		"hub_user": ["!=", hub_user.name]
 	}
 
 	if hub_user.publish_pricing:
@@ -190,7 +174,7 @@ def get_items(access_token, args):
 	return {"items": items}
 
 def get_all_companies(access_token):
-	all_company_fields = ["company_name", "hub_user_name", "country", "seller_city", "site_name", "seller_description"]
+	all_company_fields = ["company_name", "hub_user", "country", "seller_city", "site_name", "seller_description"]
 	companies = frappe.get_all("Hub Company", fields=all_company_fields)
 	return {"companies": companies}
 
@@ -216,7 +200,7 @@ def get_company_details(access_token, args):
 	return {"company_details": hub_company.as_dict()}
 
 def get_all_users(access_token):
-	users = frappe.get_all("Hub User", fields=["hub_user_name", "country"])
+	users = frappe.get_all("Hub User", fields=["hub_user", "country"])
 	return {"users": users}
 
 def get_user(access_token):

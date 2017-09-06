@@ -6,6 +6,7 @@ locale
 .wnf-lang-status
 *.swp
 *.egg-info
+*.egg-info/SOURCES.txt
 dist/
 build/
 hub/docs/current

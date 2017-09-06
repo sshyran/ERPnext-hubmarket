@@ -23,7 +23,7 @@ class HubUser(Document):
 
 	def delete_item(self, item_code):
 		"""Delete item on portal"""
-		item = frappe.db.get_value("Hub Item", {"item_code": item_code, "hub_user_name": self.name})
+		item = frappe.db.get_value("Hub Item", {"item_code": item_code, "hub_user": self.name})
 		if item:
 			frappe.delete_doc("Hub Item", item)
 
@@ -52,32 +52,32 @@ class HubUser(Document):
 		return {}
 
 	def delete_company(self):
-		company_name = frappe.get_all('Hub Company', filters={"hub_user_name": self.name})[0]["name"]
+		company_name = frappe.get_all('Hub Company', filters={"hub_user": self.name})[0]["name"]
 		frappe.db.set_value("Hub User", self.name, "company_name", None)
-		frappe.db.set_value("Hub Company", company_name, "hub_user_name", None)
+		frappe.db.set_value("Hub Company", company_name, "hub_user", None)
 		frappe.delete_doc('Hub Company', company_name, ignore_permissions=True)
 
 	def update_items(self, args):
 		"""Update items"""
-		all_items = frappe.db.sql_list("select item_code from `tabHub Item` where hub_user_name=%s", self.name)
+		all_items = frappe.db.sql_list("select item_code from `tabHub Item` where hub_user=%s", self.name)
 		item_list = json.loads(args["item_list"])
 		for item in all_items:
 			if item not in item_list:
 				frappe.delete_doc("Hub Item", item, ignore_permissions=True)
 
 		item_fields = args["item_fields"]
-		hub_user_fields = ["hub_user_name", "hub_user_email", "country", "seller_city", "company_name", "site_name"]
+		hub_user_fields = ["hub_user", "country", "seller_city", "company_name", "site_name"]
 
 		# insert / update items
 		items = json.loads(args["items_to_update"])
 		for item in items:
 			item_code = frappe.db.get_value("Hub Item",
-				{"hub_user_name": self.name, "item_code": item.get("item_code")})
+				{"hub_user": self.name, "item_code": item.get("item_code")})
 			if item_code:
 				hub_item = frappe.get_doc("Hub Item", item_code)
 			else:
 				hub_item = frappe.new_doc("Hub Item")
-				hub_item.hub_user_name = self.name
+				hub_item.hub_user = self.name
 
 			for key in item_fields:
 				hub_item.set(key, item.get(key))
@@ -102,7 +102,7 @@ class HubUser(Document):
 		print(fields_to_update)
 		for item in items_with_fields_updates:
 			item_code = frappe.db.get_value("Hub Item",
-				{"hub_user_name": self.name, "item_code": item.get("item_code")})
+				{"hub_user": self.name, "item_code": item.get("item_code")})
 			hub_item = frappe.get_doc("Hub Item", item_code)
 			for field in fields_to_update:
 				hub_item.set(field, item.get(field))
@@ -114,15 +114,15 @@ class HubUser(Document):
 		return {"total_items": len(items_with_fields_updates)}
 
 	def disable_all_items(self):
-		for item in frappe.get_all("Hub Item", fields=["name"], filters={ "hub_user_name": self.name}):
+		for item in frappe.get_all("Hub Item", fields=["name"], filters={ "hub_user": self.name}):
 			frappe.db.set_value("Item", item.name, "disabled", 1)
 
 	def unpublish_all_items(self):
-		for item in frappe.get_all("Hub Item", fields=["name"], filters={ "hub_user_name": self.name}):
+		for item in frappe.get_all("Hub Item", fields=["name"], filters={ "hub_user": self.name}):
 			frappe.db.set_value("Item", item.name, "published", 0)
 
 	def delete_all_items(self):
-		all_items = frappe.db.sql_list("select name from `tabHub Item` where hub_user_name=%s", self.name)
+		all_items = frappe.db.sql_list("select name from `tabHub Item` where hub_user=%s", self.name)
 		for name in all_items:
 			frappe.delete_doc("Hub Item", name, ignore_permissions=True)
 		return {"total_items": len(all_items)}
