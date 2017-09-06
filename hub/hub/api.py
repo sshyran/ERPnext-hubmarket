@@ -63,10 +63,6 @@ def update_user_details(access_token, args):
 	hub_user = get_user(access_token)
 	return hub_user.update_details(args)
 
-def update_items(access_token, args):
-	hub_user = get_user(access_token)
-	return hub_user.update_items(args)
-
 def update_item_fields(access_token, args):
 	hub_user = get_user(access_token)
 	return hub_user.update_item_fields(args)

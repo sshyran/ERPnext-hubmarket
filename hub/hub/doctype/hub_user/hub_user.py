@@ -57,44 +57,6 @@ class HubUser(Document):
 		frappe.db.set_value("Hub Company", company_name, "hub_user", None)
 		frappe.delete_doc('Hub Company', company_name, ignore_permissions=True)
 
-	def update_items(self, args):
-		"""Update items"""
-		all_items = frappe.db.sql_list("select item_code from `tabHub Item` where hub_user=%s", self.name)
-		item_list = json.loads(args["item_list"])
-		for item in all_items:
-			if item not in item_list:
-				frappe.delete_doc("Hub Item", item, ignore_permissions=True)
-
-		item_fields = args["item_fields"]
-		hub_user_fields = ["hub_user", "country", "seller_city", "company_name", "site_name"]
-
-		# insert / update items
-		items = json.loads(args["items_to_update"])
-		for item in items:
-			item_code = frappe.db.get_value("Hub Item",
-				{"hub_user": self.name, "item_code": item.get("item_code")})
-			if item_code:
-				hub_item = frappe.get_doc("Hub Item", item_code)
-			else:
-				hub_item = frappe.new_doc("Hub Item")
-				hub_item.hub_user = self.name
-
-			for key in item_fields:
-				hub_item.set(key, item.get(key))
-
-			hub_item.company_id = frappe.db.get_value("Hub Company", self.company_name, "name")
-
-			for key in hub_user_fields:
-				hub_item.set(key, self.get(key))
-
-			hub_item.published = 1
-			hub_item.disabled = 0
-			hub_item.save(ignore_permissions=True)
-		now_time = now()
-		self.last_sync_datetime = now_time
-		self.save(ignore_permissions=True)
-		return {"total_items": len(items)}
-		# return frappe._dict({"last_sync_datetime":now_time, "total_items": len(items)})
 
 	def update_item_fields(self, args):
 		items_with_fields_updates = json.loads(args["items_with_fields_updates"])

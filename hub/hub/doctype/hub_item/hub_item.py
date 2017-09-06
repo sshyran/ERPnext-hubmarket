@@ -3,7 +3,7 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-import frappe, json
+import frappe, json, hub
 from frappe.website.website_generator import WebsiteGenerator
 from hub.hub.utils import autoname_increment_by_field
 
@@ -32,6 +32,35 @@ class HubItem(WebsiteGenerator):
 
 	def get_context(self, context):
 		context.no_cache = True
+
+@frappe.whitelist(allow_guest=True)
+def sync_items(access_token, items):
+	hub_user = hub.get_user(access_token)
+	# company_id = frappe.db.get_value("Hub Company", hub_user.company_name, "name")
+
+	# insert / update items
+	for item in items:
+		item_code = frappe.db.get_value("Hub Item",
+			{"hub_user": hub_user, "item_code": item.get("item_code")})
+		if item_code:
+			hub_item = frappe.get_doc("Hub Item", item_code)
+		else:
+			hub_item = frappe.new_doc("Hub Item")
+			hub_item.hub_user = hub_user
+
+		for key in item:
+			hub_item.set(key, item.get(key))
+
+		hub_item.company_id = company_id
+
+		for key in hub_user_fields:
+			hub_item.set(key, hub_user.get(key))
+
+		hub_item.published = 1
+		hub_item.disabled = 0
+		hub_item.save(ignore_permissions=True)
+
+	return {"total_items": len(items)}
 
 def get_list_context(context):
 	context.allow_guest = True
