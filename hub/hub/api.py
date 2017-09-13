@@ -1,8 +1,9 @@
 # Copyright (c) 2015, Web Notes Technologies Pvt. Ltd. and Contributors and contributors
 # For license information, please see license.txt
 
+from __future__ import print_function, unicode_literals
 import frappe, json
-from frappe.utils import now, add_years
+from frappe.utils import now, add_years, random_string
 
 seller_fields = ["site_name", "seller_city", "seller_description"]
 publishing_fields = ["publish", "publish_pricing", "publish_availability"]
@@ -14,37 +15,28 @@ item_fields_to_update = ["price", "currency", "stock_qty"]
 
 ### Commands
 @frappe.whitelist(allow_guest=True)
-def register(args_data):
+def register(email):
 	"""Register on the hub."""
+
 	try:
-		args = frappe._dict(json.loads(args_data))
-		if not frappe.db.exists('Hub User', args.hub_user):
-			hub_user = make_hub_user(args)
+		if frappe.db.exists('User', email):
+			user = frappe.get_doc('User', email)
 		else:
-			hub_user = frappe.get_doc('Hub User', args.hub_user)
-			# re-register?
+			# register
+			password = random_string(16)
+			user = frappe.get_doc({
+				'doctype': 'User',
+				'email': email,
+				'first_name': first_name,
+				'password': password
+			}).insert(ignore_permissions=True)
 
-		hub_company_name = frappe.db.get_value('Hub Company',
-			dict(hub_user=hub_user.name, company_name=args.company))
-
-		if hub_company_name:
-			hub_company = frappe.get_doc('Hub Company', hub_company_name)
-		else:
-			hub_company = frappe.new_doc("Hub Company")
-
-		hub_company.company_name = args["company"]
-		for key in ["country"] + seller_fields:
-			hub_company.set(key, args[key])
-
-		# set created user link for company
-		hub_company.hub_user = args["hub_user"]
-		hub_company.save(ignore_permissions=True)
-
-		response = hub_user.as_dict()
-		return response
+			return {
+				'password': password
+			}
 
 	except:
-		print("Server Exception")
+		print("Hub Server Exception")
 		print(frappe.get_traceback())
 
 def make_hub_user(args):
