@@ -17,7 +17,6 @@ item_fields_to_update = ["price", "currency", "stock_qty"]
 @frappe.whitelist(allow_guest=True)
 def register(email):
 	"""Register on the hub."""
-
 	try:
 		if frappe.db.exists('User', email):
 			user = frappe.get_doc('User', email)
@@ -27,17 +26,27 @@ def register(email):
 			user = frappe.get_doc({
 				'doctype': 'User',
 				'email': email,
-				'first_name': first_name,
-				'password': password
-			}).insert(ignore_permissions=True)
+				'first_name': email.split("@")[0],
+				'new_password': password
+			})
+
+			user.append_roles("System Manager")
+			user.flags.delay_emails = True
+			user.insert(ignore_permissions=True)
 
 			return {
+				'email': email,
 				'password': password
 			}
 
 	except:
 		print("Hub Server Exception")
 		print(frappe.get_traceback())
+
+		return {
+			'error': "Hub Server Exception",
+			'traceback': frappe.get_traceback()
+		}
 
 def make_hub_user(args):
 	hub_user = frappe.new_doc("Hub User")
