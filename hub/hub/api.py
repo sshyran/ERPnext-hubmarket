@@ -18,11 +18,15 @@ item_fields_to_update = ["price", "currency", "stock_qty"]
 def register(email):
 	"""Register on the hub."""
 	try:
+		password = random_string(16)
+
 		if frappe.db.exists('User', email):
 			user = frappe.get_doc('User', email)
+			user.enabled = 1
+			user.new_password = password
+			user.save(ignore_permissions=True)
 		else:
 			# register
-			password = random_string(16)
 			user = frappe.get_doc({
 				'doctype': 'User',
 				'email': email,
@@ -34,10 +38,10 @@ def register(email):
 			user.flags.delay_emails = True
 			user.insert(ignore_permissions=True)
 
-			return {
-				'email': email,
-				'password': password
-			}
+		return {
+			'email': email,
+			'password': password
+		}
 
 	except:
 		print("Hub Server Exception")
