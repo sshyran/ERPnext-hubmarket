@@ -14,7 +14,8 @@ class HubItem(WebsiteGenerator):
 
 	def autoname(self):
 		super(HubItem, self).autoname()
-		self.name = autoname_increment_by_field(self.doctype, "item_code", self.name)
+		self.hub_item_code = self.name
+		self.name = autoname_increment_by_field(self.doctype, 'hub_item_code', self.name)
 
 	def validate(self):
 		if not self.route:
