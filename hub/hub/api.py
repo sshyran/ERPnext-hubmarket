@@ -18,6 +18,10 @@ item_fields_to_update = ["price", "currency", "stock_qty"]
 def register(email):
 	"""Register on the hub."""
 	try:
+		if email.lower() == 'administrator':
+			frappe.throw(_('Please login with another user'))
+			return
+
 		password = random_string(16)
 
 		if frappe.db.exists('User', email):
