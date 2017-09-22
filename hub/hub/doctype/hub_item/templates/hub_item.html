@@ -4,7 +4,7 @@
 {% block page_content %}
 <div class="hub-item">
 	<div class="hub-item-image">
-		{{ image_frame(src=image, title=title) }}
+		{{ image_frame(src="data:image/" + (image_type or "jpg") + ";base64, " + image, title=title) }}
 	</div>
 	<div class="hub-item-details">
 		<div class="hub-item-title">
