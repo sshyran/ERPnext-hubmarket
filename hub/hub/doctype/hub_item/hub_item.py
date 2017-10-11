@@ -18,6 +18,10 @@ class HubItem(WebsiteGenerator):
 		self.name = autoname_increment_by_field(self.doctype, 'hub_item_code', self.name)
 
 	def validate(self):
+		if self.image.startswith('/'):
+			site_name = frappe.db.get_value('Hub Company', item.company_name, 'site_name')
+			self.image = '//' + site_name + self.image
+
 		if not self.route:
 			self.route = 'items/' + self.name
 
