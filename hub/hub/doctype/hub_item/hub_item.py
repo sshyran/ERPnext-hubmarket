@@ -19,7 +19,7 @@ class HubItem(WebsiteGenerator):
 
 	def validate(self):
 		if self.image.startswith('/'):
-			site_name = frappe.db.get_value('Hub Company', item.company_name, 'site_name')
+			site_name = frappe.db.get_value('Hub Company', self.company_name, 'site_name')
 			self.image = '//' + site_name + self.image
 
 		if not self.route:
