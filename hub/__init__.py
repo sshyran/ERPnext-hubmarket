@@ -11,8 +11,8 @@ def get_user(access_token):
 	return hub_user_name
 
 @frappe.whitelist(allow_guest = True)
-def search(query):
+def search():
     from hub.search import search
-    results = search(query)
+    results = search(None)
 
     return results
