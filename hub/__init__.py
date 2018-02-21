@@ -12,7 +12,4 @@ def get_user(access_token):
 
 @frappe.whitelist(allow_guest = True)
 def search(query):
-    from hub.search import search
-    results = search(query)
-
-    return results
+    return "pong"
