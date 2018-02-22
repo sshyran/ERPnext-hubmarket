@@ -24,9 +24,9 @@ web_include_css = "/assets/hub/css/hub.css"
 
 website_context = {
 	# "navbar_search": 1,
-	"brand_html": "<img class='navbar-icon' src='/assets/hub/img/hub-logo.png' /><span>ERPNext Hub</span>",
-	"copyright": "ERPNext Hub",
-	"footer_address": "<br>Discover products by ERPNext users",
+	"brand_html": "<img class='navbar-icon' src='/assets/hub/img/hub-logo.png' /><span>Hub Market</span>",
+	"copyright": "Hub Market",
+	"footer_address": "<br>Discover products",
 	"hide_login": 1,
 	"favicon": "/assets/hub/img/hub-logo.png"
 }
@@ -130,7 +130,7 @@ scheduler_events = {
 # Overriding Whitelisted Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "hub.event.get_events"
-# }
+override_whitelisted_methods = {
+	"frappe.core.doctype.user.user.sign_up": "hub.hub.api.sign_up"
+}
 

@@ -3,7 +3,10 @@
 
 from __future__ import print_function, unicode_literals
 import frappe, json
+from frappe import _
 from frappe.utils import now, add_years, random_string
+from frappe.website.utils import is_signup_enabled
+from frappe.core.doctype.user.user import check_for_spamming, create_user
 
 seller_fields = ["site_name", "seller_city", "seller_description"]
 publishing_fields = ["publish", "publish_pricing", "publish_availability"]
@@ -14,6 +17,29 @@ response_item_fields = ["item_code", "item_name", "item_group", "description",
 item_fields_to_update = ["price", "currency", "stock_qty"]
 
 ### Commands
+@frappe.whitelist(allow_guest=True)
+def sign_up(email, full_name, redirect_to):
+	# Check is signup enabled
+	if not is_signup_enabled():
+		frappe.throw(_('Sign Up is disabled'), title='Not Allowed')
+
+	# Check if registered (exists)
+	user = frappe.db.get("User", {"email": email})
+	if user:
+		if user.disabled:
+			return 0, _("Registered but disabled")
+		else:
+			return 0, _("Already Registered")
+	else:
+		check_for_spamming()
+		user = create_user(email, full_name)
+
+		if redirect_to:
+			frappe.cache().hset('redirect_after_login', user.name, redirect_to)
+
+		user.send_welcome_mail_to_user()
+		return 1, _("Please check your email for verification")
+
 @frappe.whitelist(allow_guest=True)
 def register(email):
 	"""Register on the hub."""
