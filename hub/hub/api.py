@@ -37,8 +37,32 @@ def sign_up(email, full_name, redirect_to):
 		if redirect_to:
 			frappe.cache().hset('redirect_after_login', user.name, redirect_to)
 
+		# TODO: Create a Hub Profile
+
 		user.send_welcome_mail_to_user()
 		return 1, _("Please check your email for verification")
+
+@frappe.whitelist(allow_guest=True)
+def pre_reg(site_name, protocol, route):
+
+	redirect_url = protocol + site_name + route
+	doc = frappe.get_doc({
+		'doctype': 'OAuth Client',
+		'app_name': site_name,
+		'scopes': 'all openid',
+		'default_redirect_uri': redirect_url,
+		'redirect_uris': redirect_url,
+		'response_type': 'Token',
+		'grant_type': 'Implicit',
+		'skip_authorization': 1
+	})
+
+	doc.insert(ignore_permissions=True)
+
+	return {
+		"client_id": doc.client_id,
+		"redirect_uri": redirect_url
+	}
 
 @frappe.whitelist(allow_guest=True)
 def register(email):
