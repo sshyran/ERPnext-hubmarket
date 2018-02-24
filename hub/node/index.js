@@ -6,7 +6,7 @@ const hub    = { };
 
 frappe.socket.on("connection", (socket) =>
 {
-    frappe.log.info("FooBar")
+    socket.on("ping", () => socket.emit("pong"));
 });
 
 module.exports = hub;
