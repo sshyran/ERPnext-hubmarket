@@ -11,6 +11,8 @@ frappe.socket.on("connection", (socket) =>
         console.log(`PING: ${socket.request.headers.origin}`)
         socket.emit("hub:pong", "pong")
     })
+
+    
 })
 
 module.exports = hub
