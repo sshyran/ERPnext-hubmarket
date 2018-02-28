@@ -1,7 +1,7 @@
 
 // FrappeJS
 // Do something awesome!
-const frappe   = require("frappe")
+const frappe = require("frappe")
 const hub    = { }
 
 frappe.socket.on("connection", (socket) =>
@@ -11,8 +11,6 @@ frappe.socket.on("connection", (socket) =>
         console.log(`PING: ${socket.request.headers.origin}`)
         socket.emit("hub:pong", "pong")
     })
-
-    
 })
 
 module.exports = hub
