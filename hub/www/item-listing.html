@@ -1,10 +1,22 @@
-{% for item in items %}
-<div class="card" style="width: 18rem;">
-    <img class="card-img-top" src="{{item.image}}" alt="Card image cap">
-  <div class="card-body">
-      <h5 class="card-title">{{item.name}}</h5>
-      <p class="card-text">{{item.item_group}}</p>
-    <a href="#" class="btn btn-primary">Go somewhere</a>
-  </div>
-</div>
-{% endfor %}
+{% extends "templates/web.html" %}
+{% block title %}Items{% endblock %}
+{% block page_content %}
+<section class="top-section after-splash">
+    <div class="container">
+        <div class="row">
+        {% for item in items %}
+        <div class="col-sm-4">
+            <div class="card">
+                <img class="card-img-top" src="{{item.image}}" alt="Card image cap">
+              <div class="card-body">
+                  <h5 class="card-title">{{item.name}}</h5>
+                  <p class="card-text">{{item.item_group}}</p>
+                <a href="#" class="btn btn-primary">Go somewhere</a>
+              </div>
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
