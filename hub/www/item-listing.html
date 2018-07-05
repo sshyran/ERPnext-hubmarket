@@ -1,20 +1,26 @@
 {% extends "templates/web.html" %}
 {% block title %}Items{% endblock %}
 {% block page_content %}
+<section class='section-padding splash'
+    style='background-image: url({{items.0.image}})'>
+</section>
 <section class="top-section after-splash">
     <div class="container">
-        <div class="row">
+        <h1>Items</h1>
+        <p class="lead">Buy these amazing items!</p>
+        <div class='card-deck mt-5'>
         {% for item in items %}
-        <div class="col-sm-4">
-            <div class="card">
-                <img class="card-img-top" src="{{item.image}}" alt="Card image cap">
-              <div class="card-body">
-                  <h5 class="card-title">{{item.name}}</h5>
-                  <p class="card-text">{{item.item_group}}</p>
-                <a href="#" class="btn btn-primary">Go somewhere</a>
-              </div>
+        <a href="" class="card mb-4">
+            <img class="card-img-top greyscale" src="{{item.image}}" alt="">
+            <div class="card-body">
+                <h5>{{item.name}}</h5>
+                <div class="text-muted">${{item.price}}</div>
             </div>
+        </a>
+        {% if loop.index is divisibleby 3 %}
         </div>
+        <div class='card-deck'>
+        {% endif %}
         {% endfor %}
         </div>
     </div>
