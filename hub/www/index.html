@@ -4,19 +4,22 @@
 
 {% block page_content %}
 
-<div class="container">
-<section class='hero'>
-	<h1>Hub Market</h1>
-	<p class='lead'>Discover products</p>
+<section class='top-section after-splash'>
+    <div class="container">
+        <h1>Hub Market</h1>
+        <p class='lead'>Discover products</p>
+    </div>
 </section>
 <section>
-	<h2>Items</h2>
-	<div class="result">
-	{% for doc in items %}
-	{% include 'hub/doctype/hub_item/templates/hub_item_row.html'  %}
-	{% endfor %}
+    <div class="container">
+        <div class="text-center">
+            <h2>Items</h2>
+        </div>
+        {% for doc in items %}
+            {% include 'hub/doctype/hub_item/templates/hub_item_row.html'  %}
+        {% endfor %}
+        </div>
 	</div>
 </section>
-</div>
 
 {% endblock %}
