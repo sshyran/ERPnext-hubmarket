@@ -10,7 +10,7 @@
         <p class="lead">Buy these amazing items!</p>
         <div class='card-deck mt-5'>
         {% for item in items %}
-        <a href="/items/{{item.name}}" class="card mb-4">
+        <a href="/item-detail/?name={{item.name}}" class="card mb-4">
             <img class="card-img-top greyscale mx-auto" src="{{item.image}}" alt="">
             <div class="card-body">
                 <h5>{{item.name}}</h5>
