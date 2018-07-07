@@ -6,3 +6,4 @@ def get_context(context):
     if len(items) == 0:
         raise frappe.DoesNotExistError()
     context.item = items[0]
+    context.title = context.item.name

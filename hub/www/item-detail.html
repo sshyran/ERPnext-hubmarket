@@ -1,1 +1,15 @@
-Item detail {{item.name}}
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="container">
+    <p class="lead">{{item.name}}</p>
+    <div class="row">
+        <div class="col-sm-4">
+            <img src="{{item.image}}"/>
+        </div>
+        <div class="col-sm-8">
+            {{item.currency}} {{item.price}}<br/>
+            {{item.description}}
+        </div>
+    </div>
+</div>
+{% endblock %}
