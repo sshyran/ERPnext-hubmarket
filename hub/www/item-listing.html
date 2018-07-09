@@ -1,0 +1,28 @@
+{% extends "templates/web.html" %}
+{% block title %}Products{% endblock %}
+{% block page_content %}
+<section class='section-padding splash'
+    style='background-image: url({{items.0.image}})'>
+</section>
+<section class="top-section after-splash">
+    <div class="container">
+        <h1>Products</h1>
+        <p class="lead">Buy these amazing products!</p>
+        <div class='card-deck mt-5'>
+        {% for item in items %}
+        <a href="/item-detail/?name={{item.name}}" class="card mb-4">
+            <img class="card-img-top greyscale mx-auto" src="{{item.image}}" alt="">
+            <div class="card-body">
+                <h5>{{item.name}}</h5>
+                <div class="text-muted">${{item.price}}</div>
+            </div>
+        </a>
+        {% if loop.index is divisibleby 3 %}
+        </div>
+        <div class='card-deck'>
+        {% endif %}
+        {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

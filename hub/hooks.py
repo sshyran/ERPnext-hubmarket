@@ -28,7 +28,15 @@ website_context = {
 	"copyright": "Hub Market",
 	"footer_address": "<br>Discover products",
 	"hide_login": 1,
-	"favicon": "/assets/hub/img/hub-logo.png"
+	"favicon": "/assets/hub/img/hub-logo.png",
+	"top_bar_items": [
+		{"label": "Companies", "child_items": [
+			{"label": "Company List", "url": ""}
+		], "right": 1},
+		{"label": "Products", "child_items": [
+			{"label": "Product List", "url": ""}
+		], "right": 1},
+	]
 }
 
 # include js in page
