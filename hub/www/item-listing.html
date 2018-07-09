@@ -1,13 +1,13 @@
 {% extends "templates/web.html" %}
-{% block title %}Items{% endblock %}
+{% block title %}Products{% endblock %}
 {% block page_content %}
 <section class='section-padding splash'
     style='background-image: url({{items.0.image}})'>
 </section>
 <section class="top-section after-splash">
     <div class="container">
-        <h1>Items</h1>
-        <p class="lead">Buy these amazing items!</p>
+        <h1>Products</h1>
+        <p class="lead">Buy these amazing products!</p>
         <div class='card-deck mt-5'>
         {% for item in items %}
         <a href="/item-detail/?name={{item.name}}" class="card mb-4">
