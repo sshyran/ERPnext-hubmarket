@@ -36,5 +36,5 @@ class Paginator(object):
     def count(self):
         if hasattr(self, 'cnt'):
             return self.cnt
-        self.cnt = frappe.db.count(self.doctype)
+        self.cnt = frappe.db.count(self.doctype, filters=self.filters)
         return self.cnt
