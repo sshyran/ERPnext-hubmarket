@@ -35,7 +35,7 @@ website_context = {
 			{"label": "Company List", "url": ""}
 		], "right": 1},
 		{"label": "Products", "child_items": [
-			{"label": "Product List", "url": ""}
+			{"label": "Product List", "url": "/item-listing/"}
 		], "right": 1},
 	]
 }
