@@ -1,4 +1,3 @@
-import frappe
 from hub.util import get_categories_and_subcategories
 
 
