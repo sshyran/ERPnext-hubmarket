@@ -26,12 +26,18 @@
     </div>
 </section>
 
+{% if paginator.has_prev_page or paginator.has_next_page %}
 <div class="container">
-<nav aria-label="Page navigation example">
-  <ul class="pagination">
-    <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-    <li class="page-item"><a class="page-link" href="#">Next</a></li>
-  </ul>
-</nav>
+    <nav aria-label="Products pages">
+        <ul class="pagination">
+            {% if paginator.has_prev_page %}
+            <li class="page-item"><a class="page-link" href="/item-listing/?page_number={{paginator.page_number - 1}}">Previous</a></li>
+            {% endif %}
+            {% if paginator.has_next_page %}
+            <li class="page-item"><a class="page-link" href="/item-listing/?page_number={{paginator.page_number + 1}}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
 </div>
+{% endif %}
 {% endblock %}

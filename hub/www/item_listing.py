@@ -3,17 +3,19 @@ from math import ceil
 
 
 def get_context(context):
-	fields = ['published', 'route', 'image', 'name', 'company_name', 'price', 'stock_qty', 'currency']
-	filters = {'published': 1}
-	context.items = frappe.get_list('Hub Item', fields=fields, filters=filters, start=0, limit=20)
-	context.no_breadcrumbs = False
-	# context.show_sidebar = True
-	context.show_search = True
-	context.add_next_prev_links = True
+    fields = ['published', 'route', 'image', 'name', 'company_name', 'price', 'stock_qty', 'currency']
+    filters = {'published': 1}
+    page_number = int(frappe.local.request.args.get('page_number', 1))
+    paginator = Paginator('Hub Item', page_number=page_number, fields=fields, filters=filters, order_by='name')
+    context.items = paginator.get_page()
+    context.paginator = paginator
+    context.no_breadcrumbs = False
+    context.show_search = True
+    context.add_next_prev_links = True
 
 
 class Paginator(object):
-    def __init__(self, doctype, per_page, page_number, fields=['*'], filters={}, **kwargs):
+    def __init__(self, doctype, per_page=20, page_number=1, fields=['*'], filters={}, **kwargs):
         self.doctype = doctype
         self.per_page = per_page
         self.page_number = page_number
