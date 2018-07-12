@@ -17,6 +17,6 @@ def get_context(context):
     context.paginator = paginator
     context.category_name = context.list_heading = category_name
     context.no_breadcrumbs = False
-    context.parents = [{"name": "All categories"}, {"name": category.parent_hub_category}]
+    context.parents = [{"name": "All categories", "route": "/item-listing/"}, {"name": category.parent_hub_category}]
     context.show_search = True
     context.title = "%s" % (category_name,)
