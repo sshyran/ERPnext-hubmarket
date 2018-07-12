@@ -4,9 +4,9 @@ import frappe
 
 
 class Paginator(object):
-    def __init__(self, doctype, per_page=20, page_number=1, fields=['*'], filters={}, **kwargs):
+    def __init__(self, doctype, per_page=None, page_number=1, fields=['*'], filters={}, **kwargs):
         self.doctype = doctype
-        self.per_page = per_page
+        self.per_page = per_page or frappe.local.conf.get('hub_items_per_page', 20)
         self.page_number = page_number
         self.fields = fields
         self.filters = filters
