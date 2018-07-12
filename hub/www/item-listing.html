@@ -17,6 +17,9 @@
             {% if paginator.has_prev_page %}
             <li class="page-item"><a class="page-link" href="/item-listing/?page_number={{paginator.page_number - 1}}">Previous</a></li>
             {% endif %}
+            {% if paginator.has_prev_page and paginator.has_next_page %}
+            <li class="page-item"><a class="page-link" href="">{{paginator.page_number}}</a></li>
+            {% endif %}
             {% if paginator.has_next_page %}
             <li class="page-item"><a class="page-link" href="/item-listing/?page_number={{paginator.page_number + 1}}">Next</a></li>
             {% endif %}
