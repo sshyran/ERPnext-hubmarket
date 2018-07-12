@@ -10,7 +10,7 @@ def get_context(context):
     paginator = Paginator('Hub Item', page_number=page_number, fields=fields, filters=filters, order_by='name')
     context.items = paginator.get_page()
     context.paginator = paginator
-    context.category_name = category_name
+    context.category_name = context.list_heading = category_name
     context.no_breadcrumbs = False
     context.show_search = True
     context.title = "%s %s" % (category_name, 'Products')
