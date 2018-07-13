@@ -9,6 +9,7 @@
         <div class="col-sm-8">
             {{item.currency}} {{item.price}}<br/>
             {{item.description}}<br/>
+            {{item.reviews|len}} reviews<br/>
             <a href="/company-products/?company_name={{item.company_name}}">{{item.company_name}}</a>
         </div>
     </div>
