@@ -8,11 +8,29 @@
             <img src="{{item.image}}"/>
         </div>
         <div class="col-sm-8">
-            {{item.currency}} {{item.price}}<br/>
-            {{item.description}}<br/>
-            {% if num_reviews > 0 %}<a href="">{{num_reviews}} reviews</a>{% else %}{{num_reviews}} reviews{% endif %}<br/>
-            <a href="/company-products/?company_name={{item.company_name}}">{{item.company_name}}</a>
+            <div class="row">{{item.currency}} {{item.price}}</div>
+            <div class="row">{{item.description}}</div>
+            <div class="row">
+                {% if num_reviews > 0 %}<a href="#reviews">{{num_reviews}} reviews</a>
+                {% else %}{{num_reviews}} reviews
+                {% endif %}
+            </div>
+            <div class="row"><a href="/company-products/?company_name={{item.company_name}}">{{item.company_name}}</a></div>
         </div>
     </div>
+</div>
+
+<div class="container" id="reviews" style="margin-top:30px;">
+    {% for review in item.reviews %}
+        <div class="row">
+            <div class="col-sm-2">
+                <img src="{{review.user_image}}" class="avatar"/>
+            </div>
+            <div class="col">
+                <div class="row">{{review.user}}</div>
+                <div class="row">{{review.content}}</div>
+            </div>
+        </div>
+    {% endfor %}
 </div>
 {% endblock %}
