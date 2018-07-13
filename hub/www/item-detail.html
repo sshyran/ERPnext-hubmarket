@@ -1,5 +1,6 @@
 {% extends "templates/web.html" %}
 {% block page_content %}
+{% set num_reviews = item.reviews|len %}
 <div class="container">
     <p class="lead">{{item.name}}</p>
     <div class="row">
@@ -9,7 +10,7 @@
         <div class="col-sm-8">
             {{item.currency}} {{item.price}}<br/>
             {{item.description}}<br/>
-            {{item.reviews|len}} reviews<br/>
+            {% if num_reviews > 0 %}<a href="">{{num_reviews}} reviews</a>{% else %}{{num_reviews}} reviews{% endif %}<br/>
             <a href="/company-products/?company_name={{item.company_name}}">{{item.company_name}}</a>
         </div>
     </div>
