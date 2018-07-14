@@ -8,8 +8,8 @@
             <img src="{{item.image}}"/>
         </div>
         <div class="col-sm-8">
-            <div class="row">{{item.currency}} {{item.price}}</div>
-            <div class="row">{{item.description}}</div>
+            <div class="row">{{item.currency or "USD"}} {{item.price}}</div>
+            <div class="row">{{item.description or ""}}</div>
             <div class="row">
                 {% if num_reviews > 0 %}<a href="#reviews">{{num_reviews}} reviews</a>
                 {% else %}{{num_reviews}} reviews
