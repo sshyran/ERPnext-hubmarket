@@ -1,5 +1,5 @@
-<h1>{{list_heading or "Products"}}</h1>
-<p class="lead">Buy these amazing {{list_heading or "products"}}!</p>
+<h1>Products</h1>
+<p class="lead">{{list_heading or "Buy these amazing products"}}!</p>
 <div class='card-deck mt-5'>
 {% for item in items %}
 <a href="/item-detail/?name={{item.name}}" class="card mb-4">

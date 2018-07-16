@@ -14,3 +14,4 @@ def get_context(context):
     context.no_breadcrumbs = False
     context.show_search = True
     context.title = "%s %s" % (company_name, 'Products')
+    context.list_heading = "Products sold by %s" % (company_name,)
