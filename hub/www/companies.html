@@ -4,7 +4,7 @@
     <div class="container">
         <ul class="list-group">
           {% for company in companies %}
-          <li class="list-group-item disabled"><a href="/category-products/?category_name={{company.name}}">{{company.name}}</a></li>
+          <li class="list-group-item disabled"><a href="/company-detail/?name={{company.name}}">{{company.name}}</a></li>
           {% endfor %}
         </ul>
     </div>
