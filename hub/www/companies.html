@@ -1,0 +1,12 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<section class="top-section after-splash">
+    <div class="container">
+        <ul class="list-group">
+          {% for company in companies %}
+          <li class="list-group-item disabled"><a href="/category-products/?category_name={{company.name}}">{{company.name}}</a></li>
+          {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endblock %}
