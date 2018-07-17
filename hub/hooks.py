@@ -31,9 +31,7 @@ website_context = {
 	"favicon": "/assets/hub/img/hub-logo.png",
 	"top_bar_items": [
         {"label": "Shop by categories", "right": 1, "url": "/categories/"},
-		{"label": "Companies", "child_items": [
-			{"label": "Company List", "url": ""}
-		], "right": 1},
+        {"label": "Companies", "right": 1, "url": "/companies"},
 		{"label": "Products", "child_items": [
 			{"label": "Product List", "url": "/item-listing/"}
 		], "right": 1},

@@ -9,3 +9,4 @@ def get_context(context):
         raise frappe.DoesNotExistError()
     filters = {'published': 1, 'company_name': company_name}
     context.num_items = frappe.db.count('Hub Item', filters=filters)
+    context.latest_products = frappe.get_list("Hub Item", filters=filters, start=0, limit=20)
