@@ -4,10 +4,9 @@ from hub.paginator import Paginator
 
 def get_context(context):
     category_name = frappe.local.request.args['category_name']
-    categories = frappe.get_all('Hub Category', filters={'name': category_name}, fields=['*'])
-    if len(categories) == 0:
+    category = frappe.get_value('Hub Category', category_name, fieldname="*")
+    if not category:
         raise frappe.DoesNotExistError()
-    category = categories[0]
     fields = ['published', 'route', 'image', 'name', 'company_name', 'price', 'stock_qty', 'currency']
     filters = {'published': 1, 'hub_category': category.name}
     page_number = int(frappe.local.request.args.get('page_number', 1))
