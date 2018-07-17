@@ -1,0 +1,21 @@
+{% extends "templates/web.html" %}
+{% block page_content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4">
+            <!--product image-->
+            <img src="{{company.company_logo}}" alt="{{company.name}}" class="img-polaroid"/>
+        </div>
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-6">
+            <h2>{{company.name}}</h2>
+            {% if company.city or company.country %}<h4 class="muted">{% if company.city %}{{company.city}}{% endif %}{% if company.city and company.country %}, {% endif %}{% if company.country %}{{company.country}}{% endif %}</h4>{% endif %}
+            {% if company.description %}<p>{{company.description}}</p>{% endif %}
+            <hr>
+            {% if num_items %}<p><a href="/company-products/?company_name={{company.name}}">Sells {{num_items}} items</a></p>{% endif %}
+            {% if company.site_name %}<p class="muted"><a href="http://{{company.site_name}}" target="_blank">{{company.site_name}}</a></p>{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
