@@ -5,10 +5,12 @@
 <div class="container">
     <h2 class="text-center">{{item.name}}</h2>
     <div class="row">
-        <div class="col-sm-4">
-            <img src="{{item.image}}"/>
+        <div class="col-sm-6">
+            <div class="card">
+                <img src="{{item.image}}"/>
+            </div>
         </div>
-        <div class="col-sm-8">
+        <div class="col-sm-6">
             <div class="row">{{item.currency or "USD"}} {{item.price}}</div>
             <div class="row">{{item.description or ""}}</div>
             <div class="row">
