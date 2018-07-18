@@ -24,20 +24,26 @@
 </div>
 </section>
 
-<section class="section-padding section-bg">
-<div class="container" id="reviews" style="margin-top:30px;">
-    <h2 class="text-center">Reviews</h2>
-    {% for review in item.reviews %}
-        <div class="row top-buffer">
-            <div class="col-sm-2">
-                <img src="{{review.user_image}}" class="avatar"/>
+{% if item.reviews %}
+    <section class="section-padding section-bg">
+    <div class="container" id="reviews" style="margin-top:30px;">
+        <h2 class="text-center">Reviews</h2>
+        <div class="list-group">
+        {% for review in item.reviews %}
+            <div class="list-group-item list-group-item-action flex-column align-items-start card">
+                <div class="card-body">
+                    <div class="media">
+                        <img src="{{review.user_image}}" class="mr-3 greyscale rounded-circle" style="max-width: 100px;"/>
+                        <div class="media-body">
+                            <div class="row">{{review.username or review.user}}</div>
+                            <div class="row">{{review.content}}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col">
-                <div class="row">{{review.username or review.user}}</div>
-                <div class="row">{{review.content}}</div>
-            </div>
+        {% endfor %}
         </div>
-    {% endfor %}
-</div>
-</section>
+    </div>
+    </section>
+{% endif %}
 {% endblock %}
