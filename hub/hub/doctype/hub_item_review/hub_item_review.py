@@ -7,4 +7,8 @@ import frappe
 from frappe.model.document import Document
 
 class HubItemReview(Document):
-	pass
+
+    def before_naming(self):
+        if self.user:
+            user = frappe.get_doc('User', self.user)
+            self.username = user.full_name or user.username or None

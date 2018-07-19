@@ -1,12 +1,10 @@
-<h1>{{list_heading or "Products"}}</h1>
-<p class="lead">Buy these amazing {{list_heading or "products"}}!</p>
 <div class='card-deck mt-5'>
 {% for item in items %}
 <a href="/item-detail/?name={{item.name}}" class="card mb-4">
     <img class="card-img-top greyscale mx-auto" src="{{item.image}}" alt="">
     <div class="card-body">
         <h5>{{item.name}}</h5>
-        <div class="text-muted">${{item.price}}</div>
+        <div class="text-muted">{{item.currency or "USD"}} {{item.price}}</div>
     </div>
 </a>
 {% if loop.index is divisibleby 3 %}

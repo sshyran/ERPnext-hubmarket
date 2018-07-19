@@ -1,16 +1,49 @@
 {% extends "templates/web.html" %}
 {% block page_content %}
+{% set num_reviews = item.reviews|len %}
+<section class="top-section">
 <div class="container">
-    <p class="lead">{{item.name}}</p>
+    <h2 class="text-center">{{item.name}}</h2>
     <div class="row">
-        <div class="col-sm-4">
-            <img src="{{item.image}}"/>
+        <div class="col-sm-6">
+            <div class="card">
+                <img src="{{item.image}}"/>
+            </div>
         </div>
-        <div class="col-sm-8">
-            {{item.currency}} {{item.price}}<br/>
-            {{item.description}}<br/>
-            <a href="/company-products/?company_name={{item.company_name}}">{{item.company_name}}</a>
+        <div class="col-sm-6">
+            <div class="row">{{item.currency or "USD"}} {{item.price}}</div>
+            <div class="row">{{item.description or ""}}</div>
+            <div class="row">
+                {% if num_reviews > 0 %}<a href="#reviews">{{num_reviews}} reviews</a>
+                {% else %}{{num_reviews}} reviews
+                {% endif %}
+            </div>
+            <div class="row"><a href="/company-products/?company_name={{item.company_name}}">{{item.company_name}}</a></div>
         </div>
     </div>
 </div>
+</section>
+
+{% if item.reviews %}
+    <section class="section-padding section-bg">
+    <div class="container" id="reviews" style="margin-top:30px;">
+        <h2 class="text-center">Reviews</h2>
+        <div class="list-group">
+        {% for review in item.reviews %}
+            <div class="list-group-item list-group-item-action flex-column align-items-start card">
+                <div class="card-body">
+                    <div class="media">
+                        <img src="{{review.user_image}}" class="mr-3 greyscale rounded-circle" style="max-width: 100px;"/>
+                        <div class="media-body">
+                            <div class="row">{{review.username or review.user}}</div>
+                            <div class="row">{{review.content}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+    </section>
+{% endif %}
 {% endblock %}

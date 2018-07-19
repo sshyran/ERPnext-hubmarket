@@ -2,10 +2,10 @@ import frappe
 
 def get_context(context):
     name = frappe.local.request.args['name']
-    items = frappe.get_all('Hub Item', fields=['*'], filters={'name': name})
-    if len(items) == 0:
+    try:
+        context.item = frappe.get_doc('Hub Item', name)
+    except frappe.exceptions.DoesNotExistError:
         raise frappe.DoesNotExistError()
-    context.item = items[0]
     context.title = context.item.name
     context.no_breadcrumbs = False
     categories = frappe.get_all('Hub Category', filters={'name': context.item.hub_category}, fields=['*'])
