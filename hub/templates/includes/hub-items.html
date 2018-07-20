@@ -5,6 +5,7 @@
     <div class="card-body">
         <h5>{{item.name}}</h5>
         <div class="text-muted">{{item.currency or "USD"}} {{item.price}}</div>
+        <div class="text-muted">{{item.reviews_count or 0}} reviews</div>
     </div>
 </a>
 {% if loop.index is divisibleby 3 %}
