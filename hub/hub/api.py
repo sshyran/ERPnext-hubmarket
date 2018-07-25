@@ -86,14 +86,14 @@ def pre_reg(site_name, protocol, route):
 	}
 
 @frappe.whitelist(allow_guest=True)
-def register(email):
+def register(profile):
 	"""Register on the hub."""
 	try:
-		if email.lower() == 'administrator':
-			frappe.throw(_('Please login with another user'))
-			return
+		profile = frappe._dict(json.loads(profile))
 
 		password = random_string(16)
+		email = profile.company_email
+		company_name = profile.company
 
 		if frappe.db.exists('User', email):
 			user = frappe.get_doc('User', email)
@@ -105,27 +105,38 @@ def register(email):
 			user = frappe.get_doc({
 				'doctype': 'User',
 				'email': email,
-				'first_name': email.split("@")[0],
+				'first_name': company_name,
 				'new_password': password
 			})
+
 
 			user.append_roles("System Manager")
 			user.flags.delay_emails = True
 			user.insert(ignore_permissions=True)
 
+			seller_data = profile.update({
+				'doctype': 'Hub Seller',
+				'user': email
+			})
+			seller = frappe.get_doc(seller_data)
+			seller.insert(ignore_permissions=True)
+	
+			
 		return {
 			'email': email,
 			'password': password
 		}
 
-	except:
+	except Exception as e:
 		print("Hub Server Exception")
 		print(frappe.get_traceback())
 
-		return {
-			'error': "Hub Server Exception",
-			'traceback': frappe.get_traceback()
-		}
+		frappe.throw(frappe.get_traceback())
+
+		# return {
+		# 	'error': "Hub Server Exception",
+		# 	'traceback': frappe.get_traceback()
+		# }
 
 ### Queries
 def get_items(access_token, args):
