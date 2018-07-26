@@ -1,0 +1,1 @@
+hub.patches.v0_0_1.move_seller_info_to_hub_seller
