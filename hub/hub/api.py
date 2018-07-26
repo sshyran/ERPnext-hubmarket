@@ -109,7 +109,6 @@ def register(profile):
 				'new_password': password
 			})
 
-
 			user.append_roles("System Manager")
 			user.flags.delay_emails = True
 			user.insert(ignore_permissions=True)
@@ -120,8 +119,8 @@ def register(profile):
 			})
 			seller = frappe.get_doc(seller_data)
 			seller.insert(ignore_permissions=True)
-	
-			
+
+
 		return {
 			'email': email,
 			'password': password
@@ -217,3 +216,37 @@ def get_all_users(access_token):
 
 def get_user(access_token):
 	return frappe.get_doc("Hub User", {"access_token": access_token})
+
+@frappe.whitelist(allow_guest=True)
+def get_data_for_homepage(country=None):
+	'''
+	Get curated item list for the homepage.
+	'''
+
+	fields = ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
+	other_fields = ['company_name', 'rating']
+
+	items = []
+
+	if country:
+		items += frappe.get_all('Hub Item', fields=fields,
+			filters={
+				'country': ['like', '%' + country + '%']
+			}, limit=8)
+
+	items += frappe.get_all('Hub Item', fields=fields,
+		filters={
+			'image': ['like', 'http%']
+		}, limit=8)
+
+
+	for item in items:
+		item.average_rating = frappe.db.get_all('Hub Item Review', fields=['AVG(rating) as average_rating'], filters={
+			'parenttype': 'Hub Item',
+			'parentfield': 'reviews',
+			'parent': item.name
+		})[0]['average_rating']
+
+		item.company_name = frappe.db.get_value('Hub Seller', item.hub_seller, 'company') or ''
+
+	return items
