@@ -25,6 +25,28 @@ class HubItem(WebsiteGenerator):
 		if not self.route:
 			self.route = 'items/' + self.name
 
+	def on_update(self):
+		# update fulltext field
+		keyword_fields = ["item_name", "item_code", "hub_item_code", "hub_category",
+			"hub_seller.company", "hub_seller.country", "hub_seller.company_description"]
+
+		keywords = []
+
+		for field in keyword_fields:
+			if '.' in field:
+				link_field, fieldname = field.split(".")
+				doctype = self.meta.get_field(link_field).options
+				name = self.get(link_field)
+				value = frappe.db.get_value(doctype, name, fieldname)
+
+				keywords.append(value or "")
+
+			else:
+				keywords.append(self.get(field, "") or "")
+
+		self.keywords = (" ").join(keywords)
+		frappe.errprint(self.keywords)
+
 	def get_context(self, context):
 		context.no_cache = True
 
