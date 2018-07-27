@@ -114,6 +114,7 @@ def register(profile):
 			user.insert(ignore_permissions=True)
 
 			seller_data = profile.update({
+				'enabled': 1,
 				'doctype': 'Hub Seller',
 				'user': email
 			})
@@ -256,6 +257,22 @@ def get_items_by_keyword(keyword=None):
 
 	return items
 
+@frappe.whitelist()
+def get_items_by_seller(hub_seller, keywords=''):
+	'''
+	Get items by the given Hub Seller
+	'''
+	fields = get_item_fields()
+
+	items = frappe.get_all('Hub Item', fields=fields,
+		filters={
+			'hub_seller': hub_seller,
+			'keywords': ['like', '%' + keywords + '%']
+		})
+
+	items = get_item_rating_and_company_name(items)
+
+	return items
 
 def get_item_fields():
 	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
