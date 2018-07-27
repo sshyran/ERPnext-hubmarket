@@ -25,7 +25,9 @@ class HubItem(WebsiteGenerator):
 		if not self.route:
 			self.route = 'items/' + self.name
 
-	def on_update(self):
+		self.update_keywords_field()
+
+	def update_keywords_field(self):
 		# update fulltext field
 		keyword_fields = ["item_name", "item_code", "hub_item_code", "hub_category",
 			"hub_seller.company", "hub_seller.country", "hub_seller.company_description"]

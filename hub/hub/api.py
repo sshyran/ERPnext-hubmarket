@@ -222,10 +222,7 @@ def get_data_for_homepage(country=None):
 	'''
 	Get curated item list for the homepage.
 	'''
-
-	fields = ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
-	other_fields = ['company_name', 'rating']
-
+	fields = get_item_fields()
 	items = []
 
 	if country:
@@ -239,7 +236,33 @@ def get_data_for_homepage(country=None):
 			'image': ['like', 'http%']
 		}, limit=8)
 
+	items = get_item_rating_and_company_name(items)
 
+	return items
+
+@frappe.whitelist()
+def get_items_by_keyword(keyword=None):
+	'''
+	Get items by matching it with the keywords field
+	'''
+	if not keyword: return None
+
+	fields = get_item_fields()
+
+	items = frappe.get_all('Hub Item', fields=fields,
+		filters={
+			'keywords': ['like', '%' + keyword + '%']
+		})
+
+	items = get_item_rating_and_company_name(items)
+
+	return items
+
+
+def get_item_fields():
+	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
+
+def get_item_rating_and_company_name(items):
 	for item in items:
 		item.average_rating = frappe.db.get_all('Hub Item Review', fields=['AVG(rating) as average_rating'], filters={
 			'parenttype': 'Hub Item',
