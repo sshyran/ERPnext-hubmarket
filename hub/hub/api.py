@@ -245,8 +245,6 @@ def get_items_by_keyword(keyword=None):
 	'''
 	Get items by matching it with the keywords field
 	'''
-	if not keyword: return None
-
 	fields = get_item_fields()
 
 	items = frappe.get_all('Hub Item', fields=fields,
