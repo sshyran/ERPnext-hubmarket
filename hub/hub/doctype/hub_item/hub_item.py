@@ -47,7 +47,6 @@ class HubItem(WebsiteGenerator):
 				keywords.append(self.get(field, "") or "")
 
 		self.keywords = (" ").join(keywords)
-		frappe.errprint(self.keywords)
 
 	def get_context(self, context):
 		context.no_cache = True
