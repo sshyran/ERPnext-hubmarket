@@ -116,7 +116,8 @@ def register(profile):
 			seller_data = profile.update({
 				'enabled': 1,
 				'doctype': 'Hub Seller',
-				'user': email
+				'user': email,
+				'hub_seller_activity':[{'type': 'Created'}]
 			})
 			seller = frappe.get_doc(seller_data)
 			seller.insert(ignore_permissions=True)
@@ -273,6 +274,41 @@ def get_items_by_seller(hub_seller, keywords=''):
 	items = get_item_rating_and_company_name(items)
 
 	return items
+
+@frappe.whitelist()
+def init_new_activity_for_seller(hub_seller, activity_type):
+	doc = frappe.get_doc("Hub Seller", hub_seller)
+
+	act = doc.hub_seller_activity[0]
+
+	new_activity = frappe.new_doc("Hub Seller Activity")
+	new_activity.parent = act.parent
+	new_activity.parenttype = act.parenttype
+	new_activity.parentfield = act.parentfield
+
+	new_activity.type = activity_type
+	new_activity.start_time = frappe.utils.now()
+	new_activity.name = ""
+
+	doc.hub_seller_activity.append(new_activity)
+	new_activity.insert(ignore_permissions=True)
+	doc.save(ignore_permissions=True)
+
+	return new_activity.name
+
+@frappe.whitelist()
+def update_activity_for_seller(hub_seller, name, status, stats=''):
+	# doc = frappe.get_doc("Hub Seller", hub_seller)
+
+	activity = frappe.get_doc("Hub Seller Activity", name)
+	activity.end_time = frappe.utils.now()
+	activity.status = status
+
+	if stats:
+		activity.no_items_synced = stats["push_update"]
+
+	activity.save(ignore_permissions=True)
+	return name
 
 def get_item_fields():
 	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
