@@ -204,9 +204,10 @@ def get_categories(access_token):
 	# categories = frappe.get_all("Hub Category", fields=["category_name"])
 	return {"categories": categories}
 
-def get_item_details(access_token, args):
-	hub_item = frappe.get_doc("Hub Item", {"item_code": args["item_code"]})
-	return {"item_details": hub_item.as_dict()}
+@frappe.whitelist(allow_guest=True)
+def get_item_details(hub_item_code):
+	hub_item = frappe.get_doc("Hub Item", {"hub_item_code": hub_item_code})
+	return hub_item.as_dict()
 
 def get_company_details(access_token, args):
 	hub_company = frappe.get_doc("Hub Company", {"name": args["company_id"]})
@@ -276,6 +277,15 @@ def get_items_by_seller(hub_seller, keywords=''):
 	return items
 
 @frappe.whitelist()
+def get_hub_seller_profile(hub_seller):
+	profile = frappe.get_doc("Hub Seller", hub_seller).as_dict()
+
+	for log in profile.hub_seller_activity:
+		log.pretty_date = frappe.utils.pretty_date(log.get('creation'))
+
+	return profile
+
+@frappe.whitelist()
 def init_new_activity_for_seller(hub_seller, activity_type):
 	doc = frappe.get_doc("Hub Seller", hub_seller)
 
@@ -303,9 +313,7 @@ def update_activity_for_seller(hub_seller, name, status, stats=''):
 	activity = frappe.get_doc("Hub Seller Activity", name)
 	activity.end_time = frappe.utils.now()
 	activity.status = status
-
-	if stats:
-		activity.no_items_synced = stats["push_update"]
+	activity.stats = stats
 
 	activity.save(ignore_permissions=True)
 	return name
