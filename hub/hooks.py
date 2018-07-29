@@ -30,6 +30,7 @@ website_context = {
 	"hide_login": 1,
 	"favicon": "/assets/hub/img/hub-logo.png",
 	"top_bar_items": [
+		{"label": "Shop by Region", "right": 1, "url": "/region/"},
         {"label": "Shop by categories", "right": 1, "url": "/categories/"},
         {"label": "Companies", "right": 1, "url": "/companies"},
 		{"label": "Products", "child_items": [
