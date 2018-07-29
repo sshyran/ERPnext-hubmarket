@@ -6,6 +6,8 @@
         <h5>{{item.name}}</h5>
         <div class="text-muted">{{item.currency or "USD"}} {{item.price}}</div>
         <div class="text-muted">{{item.reviews_count or 0}} reviews</div>
+        <div class="text-muted">Sold by {{item.company_name}}</div>
+        <div class="text-muted">{% if item.stock_qty > 0 %}In stock{% else %}Not Available{% endif %}</div>
     </div>
 </a>
 {% if loop.index is divisibleby 3 %}

@@ -7,7 +7,7 @@ def get_context(context):
     category = frappe.get_value('Hub Category', category_name, fieldname="*")
     if not category:
         raise frappe.DoesNotExistError()
-    fields = ['published', 'route', 'image', 'name', 'company_name', 'price', 'stock_qty', 'currency', '`tabHub Item Review`.content', 'count(`tabHub Item Review`.content) as reviews_count']
+    fields = ['image', 'name', 'company_name', 'price', 'stock_qty', 'currency', '`tabHub Item Review`.content', 'count(`tabHub Item Review`.content) as reviews_count']
     group_by = 'name'
     filters = {'published': 1, 'hub_category': category.name}
     page_number = int(frappe.local.request.args.get('page_number', 1))
