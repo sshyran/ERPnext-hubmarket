@@ -3,8 +3,8 @@
 <section class="top-section after-splash">
     <div class="container">
         <ul class="list-group">
-          {%for products in products_count%}
-          	<li class="list-group-item disabled"><a href="/company-detail/?name={{products}}">{{products}} [{{products_count[products]}} products] </a></li>
+          {% for company in companies %}
+            <li class="list-group-item disabled"><a href="/company-detail/?name={{company.name}}">{{company.name}}</a> [{{company.num_products}} products]</li>
           {% endfor %}
         </ul>
     </div>
