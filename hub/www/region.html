@@ -1,15 +1,5 @@
 {% extends "templates/web.html" %}
 {% block page_content %}
-
-<!-- <section class="top-section after-splash">
-    <div class="container">
-        <ul class="list-group">
-          {% for region in region_list %}
-	          	<li class="list-group-item disabled"><a href="/region-company/?name={{region}}">{{region}}</a></li>
-          {% endfor %}
-        </ul>
-    </div>
-</section> -->
 <section class="top-section after-splash">
     <div class="container">
         {% for region in region_company_list %}
@@ -22,5 +12,4 @@
         {% endfor %}
     </div>
 </section>
-
 {% endblock %}
