@@ -7,8 +7,8 @@ def get_context(context):
     fields = ['published', 'route', 'image', 'name', 'company_name', 'price', 'stock_qty', 'currency', '`tabHub Item Review`.content', 'count(`tabHub Item Review`.content) as reviews_count']
     group_by = 'name'
     filters = {'published': 1}
-    page_number = int(frappe.local.request.args.get('page_number', 1))
-    search = frappe.local.request.args.get('search', '')
+    page_number = int(frappe.local.form_dict.get('page_number', 1))
+    search = frappe.local.form_dict.search
     or_filters = None
     if search:
         or_filters = [
