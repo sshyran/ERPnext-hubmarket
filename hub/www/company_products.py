@@ -18,5 +18,4 @@ def get_context(context):
     context.paginator = paginator
     context.company_name = company_name
     context.no_breadcrumbs = False
-    context.show_search = True
     context.title = "%s %s" % (company_name, 'Products')

@@ -18,6 +18,5 @@ def get_context(context):
     context.category_name = category_name
     context.no_breadcrumbs = False
     context.parents = [{"name": "All categories", "route": "/item-listing/"}, {"name": category.parent_hub_category}]
-    context.show_search = True
     context.title = "%s" % (category_name,)
     context.list_heading = "Buy these amazing %s" % (category_name,)
