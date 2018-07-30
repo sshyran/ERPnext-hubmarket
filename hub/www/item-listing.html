@@ -1,6 +1,15 @@
 {% extends "templates/web.html" %}
 {% block title %}Products{% endblock %}
 {% block page_content %}
+<section class="top-section after-splash">
+    <div class="row">
+      <div class="col">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Search for..." class="item-search-input">
+        </div>
+      </div>
+    </div>
+</section>
 <section class='section-padding splash'
     style='background-image: url({{items.0.image}})'>
 </section>
