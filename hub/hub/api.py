@@ -228,20 +228,56 @@ def get_data_for_homepage(country=None):
 	fields = get_item_fields()
 	items = []
 
+	items_by_country = []
 	if country:
-		items += frappe.get_all('Hub Item', fields=fields,
-			filters={
-				'country': ['like', '%' + country + '%']
-			}, limit=8)
+		items_by_country += get_items_by_country(country)
 
-	items += frappe.get_all('Hub Item', fields=fields,
+	items_with_images = get_items_with_images()
+
+	return dict(
+		items_by_country = items_by_country,
+		items_with_images = items_with_images or [],
+		random_items = get_random_items_from_each_hub_seller() or []
+	)
+
+def get_items_by_country(country):
+	fields = get_item_fields()
+
+	items = frappe.get_all('Hub Item', fields=fields,
+		filters={
+			'country': ['like', '%' + country + '%']
+		}, limit=8)
+
+	return get_item_rating_and_company_name(items)
+
+def get_random_items_from_each_hub_seller():
+	res = frappe.db.sql('''
+		SELECT * FROM (
+			SELECT
+				h.name AS hub_seller_name, h.name, i.name AS hub_item_code, i.item_name
+			FROM `tabHub Seller` h
+			INNER JOIN `tabHub Item` i ON h.name = i.hub_seller
+			ORDER BY RAND()
+		) AS shuffled_items
+		GROUP BY hub_seller_name;
+	''', as_dict=True)
+
+	hub_item_codes = [r.hub_item_code for r in res]
+
+	fields = get_item_fields()
+	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': ['in', hub_item_codes] })
+
+	return get_item_rating_and_company_name(items)
+
+def get_items_with_images():
+	fields = get_item_fields()
+
+	items = frappe.get_all('Hub Item', fields=fields,
 		filters={
 			'image': ['like', 'http%']
 		}, limit=8)
 
-	items = get_item_rating_and_company_name(items)
-
-	return items
+	return get_item_rating_and_company_name(items)
 
 @frappe.whitelist()
 def get_items_by_keyword(keyword=None):
@@ -318,17 +354,59 @@ def update_activity_for_seller(hub_seller, name, status, stats=''):
 	activity.save(ignore_permissions=True)
 	return name
 
+def get_item_details(hub_item_code):
+	fields = get_item_fields()
+	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': hub_item_code })
+	items = get_item_rating_and_company_name(items)
+	return items[0]
+
+@frappe.whitelist()
+def get_item_reviews(hub_item_code):
+	reviews = frappe.db.get_all('Hub Item Review', fields=['*'],
+		filters={
+			'parenttype': 'Hub Item',
+			'parentfield': 'reviews',
+			'parent': hub_item_code
+		}, order_by='modified desc')
+
+	return reviews or []
+
+@frappe.whitelist()
+def add_item_review(hub_item_code, review):
+	'''Adds a review record for Hub Item and limits to 1 per user'''
+	new_review = json.loads(review)
+
+	item_doc = frappe.get_doc('Hub Item', hub_item_code)
+	existing_reviews = item_doc.get('reviews')
+
+	# dont allow more than 1 review
+	for review in existing_reviews:
+		if review.get('user') == new_review.get('user'):
+			return dict(error='Cannot add more than 1 review for the user {0}'.format(new_review.get('user')))
+
+	item_doc.append('reviews', new_review)
+	item_doc.save()
+
+	return item_doc.get('reviews')[-1]
+
 def get_item_fields():
 	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
 
 def get_item_rating_and_company_name(items):
 	for item in items:
-		item.average_rating = frappe.db.get_all('Hub Item Review', fields=['AVG(rating) as average_rating'], filters={
+		res = frappe.db.get_all('Hub Item Review', fields=['AVG(rating) as average_rating, count(rating) as no_of_ratings'], filters={
 			'parenttype': 'Hub Item',
 			'parentfield': 'reviews',
 			'parent': item.name
-		})[0]['average_rating']
+		})[0]
 
-		item.company_name = frappe.db.get_value('Hub Seller', item.hub_seller, 'company') or ''
+		item.average_rating = res['average_rating']
+		item.no_of_ratings = res['no_of_ratings']
+
+		company, country, city = frappe.db.get_value('Hub Seller', item.hub_seller, ['company', 'country', 'city'])
+
+		item.company = company
+		item.country = country
+		item.city = city
 
 	return items
