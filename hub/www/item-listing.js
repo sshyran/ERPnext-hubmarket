@@ -1,7 +1,11 @@
 frappe.ready(function() {
     function find_result(t) {
-        var search_link = location.pathname;
-        window.location.href=search_link + "?search=" + t;
+        if (location.search !== '') {
+            window.location.href = location.href + "&search=" + t;
+        }
+        else {
+            window.location.href = location.pathname + "?search=" + t;
+        }
     }
 
     $(".item-search-input").keyup(function(e) {
@@ -9,5 +13,4 @@ frappe.ready(function() {
             find_result($(this).val());
         }
     });
-    $(".form-search").on("submit", function() { return false; });
 });

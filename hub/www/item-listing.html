@@ -5,14 +5,16 @@
     <div class="row">
       <div class="col">
         <div class="input-group">
-          <input type="text" class="form-control" placeholder="Search for..." class="item-search-input">
+            <input type="text" class="form-control item-search-input" placeholder="Search for..." {% if frappe.form_dict.search %}value="{{frappe.form_dict.search}}"{% endif %}>
         </div>
       </div>
     </div>
 </section>
+{% if items|length > 0 %}
 <section class='section-padding splash'
     style='background-image: url({{items.0.image}})'>
 </section>
+{% endif %}
 <section class="top-section after-splash">
     <div class="container">
         <h1>Products</h1>

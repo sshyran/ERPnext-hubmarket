@@ -8,6 +8,14 @@ def get_context(context):
     group_by = 'name'
     filters = {'published': 1}
     page_number = int(frappe.local.request.args.get('page_number', 1))
-    paginator = Paginator('Hub Item', page_number=page_number, fields=fields, filters=filters, order_by='name', group_by=group_by)
+    search = frappe.local.request.args.get('search', '')
+    or_filters = None
+    if search:
+        or_filters = [
+            {"name": ["like", "%{0}%".format(search)]},
+            {"hub_category": ["like", "%{0}%".format(search)]},
+            {"company_name": ["like", "%{0}%".format(search)]}
+        ]
+    paginator = Paginator('Hub Item', page_number=page_number, fields=fields, filters=filters, order_by='name', group_by=group_by, or_filters=or_filters)
     context.items = paginator.get_page()
     context.paginator = paginator
