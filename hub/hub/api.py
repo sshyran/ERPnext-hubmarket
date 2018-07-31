@@ -248,7 +248,7 @@ def get_items_by_country(country):
 			'country': ['like', '%' + country + '%']
 		}, limit=8)
 
-	return get_item_rating_and_company_name(items)
+	return post_process_item_details(items)
 
 def get_random_items_from_each_hub_seller():
 	res = frappe.db.sql('''
@@ -267,7 +267,7 @@ def get_random_items_from_each_hub_seller():
 	fields = get_item_fields()
 	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': ['in', hub_item_codes] })
 
-	return get_item_rating_and_company_name(items)
+	return post_process_item_details(items)
 
 def get_items_with_images():
 	fields = get_item_fields()
@@ -277,7 +277,7 @@ def get_items_with_images():
 			'image': ['like', 'http%']
 		}, limit=8)
 
-	return get_item_rating_and_company_name(items)
+	return post_process_item_details(items)
 
 @frappe.whitelist()
 def get_items_by_keyword(keyword=None):
@@ -291,7 +291,7 @@ def get_items_by_keyword(keyword=None):
 			'keywords': ['like', '%' + keyword + '%']
 		})
 
-	items = get_item_rating_and_company_name(items)
+	items = post_process_item_details(items)
 
 	return items
 
@@ -308,7 +308,7 @@ def get_items_by_seller(hub_seller, keywords=''):
 			'keywords': ['like', '%' + keywords + '%']
 		})
 
-	items = get_item_rating_and_company_name(items)
+	items = post_process_item_details(items)
 
 	return items
 
@@ -339,7 +339,7 @@ def get_hub_seller_profile(hub_seller):
 def get_item_details(hub_item_code):
 	fields = get_item_fields()
 	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': hub_item_code })
-	items = get_item_rating_and_company_name(items)
+	items = post_process_item_details(items)
 	return items[0]
 
 @frappe.whitelist()
@@ -388,7 +388,18 @@ def get_item_favourites():
 def get_item_fields():
 	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
 
-def get_item_rating_and_company_name(items):
+def post_process_item_details(items):
+	items = get_item_details_and_company_name(items)
+
+	url = frappe.utils.get_url()
+	for item in items:
+		# convert relative path to absolute path
+		if item.image.startswith('/files/'):
+			item.image = url + item.image
+
+	return items
+
+def get_item_details_and_company_name(items):
 	for item in items:
 		res = frappe.db.get_all('Hub Item Review', fields=['AVG(rating) as average_rating, count(rating) as no_of_ratings'], filters={
 			'parenttype': 'Hub Item',
