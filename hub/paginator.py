@@ -15,7 +15,7 @@ class Paginator(object):
 
     def get_page(self):
         bottom = (self.page_number - 1) * self.per_page
-        page_items = frappe.get_list(self.doctype, fields=self.fields, filters=self.filters, start=bottom, limit=self.per_page, **self.kwargs)
+        page_items = frappe.get_all(self.doctype, fields=self.fields, filters=self.filters, start=bottom, limit=self.per_page, **self.kwargs)
         return page_items
 
     @property
