@@ -312,41 +312,20 @@ def get_items_by_seller(hub_seller, keywords=''):
 	return items
 
 @frappe.whitelist()
-def init_new_activity_for_seller(hub_seller, activity_type):
-	doc = frappe.get_doc("Hub Seller", hub_seller)
+def add_hub_seller_activity(hub_seller, activity_details):
+	activity_details = json.loads(activity_details)
+	doc = frappe.get_doc({
+		'doctype': 'Activity Log',
+		'user': hub_seller,
+		'status': activity_details.get('status', ''),
+		'subject': activity_details['subject'],
+		'content': activity_details.get('content', ''),
+		'reference_doctype': 'Hub Seller',
+		'reference_name': hub_seller
+	}).insert(ignore_permissions=True)
+	return doc
 
-	act = doc.hub_seller_activity[0]
-
-	new_activity = frappe.new_doc("Hub Seller Activity")
-	new_activity.parent = act.parent
-	new_activity.parenttype = act.parenttype
-	new_activity.parentfield = act.parentfield
-
-	new_activity.type = activity_type
-	new_activity.start_time = frappe.utils.now()
-	new_activity.name = ""
-
-	doc.hub_seller_activity.append(new_activity)
-	new_activity.insert(ignore_permissions=True)
-	doc.save(ignore_permissions=True)
-
-	return new_activity.name
-
-@frappe.whitelist()
-def update_activity_for_seller(hub_seller, name, status, stats=''):
-	# doc = frappe.get_doc("Hub Seller", hub_seller)
-
-	activity = frappe.get_doc("Hub Seller Activity", name)
-	activity.end_time = frappe.utils.now()
-	activity.status = status
-
-	if stats:
-		activity.no_items_synced = stats["push_update"]
-
-	activity.save(ignore_permissions=True)
-	return name
-
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_item_details(hub_item_code):
 	fields = get_item_fields()
 	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': hub_item_code })
@@ -381,6 +360,20 @@ def add_item_review(hub_item_code, review):
 	item_doc.save()
 
 	return item_doc.get('reviews')[-1]
+
+@frappe.whitelist()
+def get_categories(parent='All Categories'):
+	# get categories info with parent category and stuff
+	categories = frappe.get_all('Hub Category',
+		filters={'parent_hub_category': parent},
+		fields=['name'],
+		order_by='name asc')
+
+	return categories
+
+@frappe.whitelist()
+def get_item_favourites():
+	return []
 
 def get_item_fields():
 	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
