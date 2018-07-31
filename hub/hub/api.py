@@ -354,6 +354,7 @@ def update_activity_for_seller(hub_seller, name, status, stats=''):
 	activity.save(ignore_permissions=True)
 	return name
 
+@frappe.whitelist()
 def get_item_details(hub_item_code):
 	fields = get_item_fields()
 	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': hub_item_code })
