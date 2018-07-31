@@ -204,9 +204,10 @@ def get_categories(access_token):
 	# categories = frappe.get_all("Hub Category", fields=["category_name"])
 	return {"categories": categories}
 
-def get_item_details(access_token, args):
-	hub_item = frappe.get_doc("Hub Item", {"item_code": args["item_code"]})
-	return {"item_details": hub_item.as_dict()}
+@frappe.whitelist(allow_guest=True)
+def get_item_details(hub_item_code):
+	hub_item = frappe.get_doc("Hub Item", {"hub_item_code": hub_item_code})
+	return hub_item.as_dict()
 
 def get_company_details(access_token, args):
 	hub_company = frappe.get_doc("Hub Company", {"name": args["company_id"]})
@@ -324,6 +325,15 @@ def add_hub_seller_activity(hub_seller, activity_details):
 		'reference_name': hub_seller
 	}).insert(ignore_permissions=True)
 	return doc
+
+@frappe.whitelist()
+def get_hub_seller_profile(hub_seller):
+	profile = frappe.get_doc("Hub Seller", hub_seller).as_dict()
+
+	for log in profile.hub_seller_activity:
+		log.pretty_date = frappe.utils.pretty_date(log.get('creation'))
+
+	return profile
 
 @frappe.whitelist(allow_guest=True)
 def get_item_details(hub_item_code):
