@@ -18,12 +18,18 @@ def update_hub_seller_activity(hub_seller, activity_details):
 	return doc
 
 def update_hub_item_view_log(hub_seller, hub_item_code):
-	doc = frappe.get_doc({
-		'doctype': 'Hub Item View Log',
+	hub_item_seller = frappe.db.get_value('Hub Item', hub_item_code, 'hub_seller')
+	existing = frappe.db.get_all('Hub Item View Log', filters={
 		'reference_hub_item': hub_item_code,
 		'viewed_by': hub_seller
-	}).insert(ignore_permissions=True)
-	return doc
+	})
+	if not hub_seller == hub_item_seller and not len(existing):
+		doc = frappe.get_doc({
+			'doctype': 'Hub Item View Log',
+			'reference_hub_item': hub_item_code,
+			'viewed_by': hub_seller
+		}).insert(ignore_permissions=True)
+		return doc
 
 def update_hub_favourite_view_log(hub_seller, hub_item_code):
 	doc = frappe.get_doc({
@@ -32,3 +38,7 @@ def update_hub_favourite_view_log(hub_seller, hub_item_code):
 		'favourited_by': hub_seller
 	}).insert(ignore_permissions=True)
 	return doc
+
+def get_item_view_count(hub_item_code):
+	return len(frappe.get_all('Hub Item View Log',
+		filters={'reference_hub_item': hub_item_code}))

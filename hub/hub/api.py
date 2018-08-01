@@ -9,7 +9,7 @@ from frappe.utils import random_string
 from curation import (get_item_fields, post_process_item_details, get_items_by_country,
 	get_items_with_images, get_random_items_from_each_hub_seller)
 
-from log import update_hub_seller_activity, update_hub_item_view_log
+from log import update_hub_seller_activity, update_hub_item_view_log, get_item_view_count
 
 @frappe.whitelist(allow_guest=True)
 def register(profile):
@@ -86,7 +86,7 @@ def get_data_for_homepage(country=None):
 	)
 
 @frappe.whitelist()
-def get_items(keyword=None, hub_seller=None):
+def get_items(keyword='', hub_seller=None):
 	'''
 	Get items by matching it with the keywords field
 	'''
@@ -104,6 +104,8 @@ def get_items(keyword=None, hub_seller=None):
 
 	items = post_process_item_details(items)
 
+	print(items, hub_seller)
+
 	return items
 
 @frappe.whitelist()
@@ -111,11 +113,15 @@ def add_hub_seller_activity(hub_seller, activity_details):
 	return update_hub_seller_activity(hub_seller, activity_details)
 
 @frappe.whitelist()
-def get_hub_seller_profile(hub_seller):
-	profile = frappe.get_doc("Hub Seller", hub_seller).as_dict()
+def get_hub_seller_profile(hub_seller='', company=''):
+	if hub_seller:
+		profile = frappe.get_doc("Hub Seller", hub_seller).as_dict()
+	else:
+		profile = frappe.get_all("Hub Seller", fields=['*'], filters = {'company': company})[0]
 
-	for log in profile.hub_seller_activity:
-		log.pretty_date = frappe.utils.pretty_date(log.get('creation'))
+	if profile.hub_seller_activity:
+		for log in profile.hub_seller_activity:
+			log.pretty_date = frappe.utils.pretty_date(log.get('creation'))
 
 	return profile
 
@@ -124,8 +130,12 @@ def get_item_details(hub_seller, hub_item_code):
 	fields = get_item_fields()
 	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': hub_item_code })
 	items = post_process_item_details(items)
+	item = items[0]
+
+	item['view_count'] = get_item_view_count(hub_item_code)
+
 	update_hub_item_view_log(hub_seller, hub_item_code)
-	return items[0]
+	return item
 
 @frappe.whitelist()
 def get_item_reviews(hub_item_code):
