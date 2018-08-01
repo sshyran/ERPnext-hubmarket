@@ -394,7 +394,7 @@ def post_process_item_details(items):
 	url = frappe.utils.get_url()
 	for item in items:
 		# convert relative path to absolute path
-		if item.image.startswith('/files/'):
+		if item.image and item.image.startswith('/files/'):
 			item.image = url + item.image
 
 	return items
