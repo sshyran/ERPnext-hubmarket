@@ -1,89 +1,15 @@
 # Copyright (c) 2015, Web Notes Technologies Pvt. Ltd. and Contributors and contributors
 # For license information, please see license.txt
 
-from __future__ import print_function, unicode_literals
+from __future__ import unicode_literals
 import frappe, json
 from frappe import _
-from frappe.utils import now, add_years, random_string
-from frappe.website.utils import is_signup_enabled
-# from frappe.core.doctype.user.user import check_for_spamming, create_user
+from frappe.utils import random_string
 
-seller_fields = ["site_name", "seller_city", "seller_description"]
-publishing_fields = ["publish", "publish_pricing", "publish_availability"]
+from curation import (get_item_fields, post_process_item_details, get_items_by_country,
+	get_items_with_images, get_random_items_from_each_hub_seller)
 
-response_item_fields = ["item_code", "item_name", "item_group", "description",
-	"image", "stock_uom"] # creation_at_client, request_count
-
-item_fields_to_update = ["price", "currency", "stock_qty"]
-
-### Commands
-@frappe.whitelist(allow_guest=True)
-def sign_up(email, full_name, redirect_to):
-	# Check is signup enabled
-	if not is_signup_enabled():
-		frappe.throw(_('Sign Up is disabled'), title='Not Allowed')
-
-	# Check if registered (exists)
-	user = frappe.db.get("User", {"email": email})
-	if user:
-		if user.disabled:
-			return 0, _("Registered but disabled")
-		else:
-			return 0, _("Already Registered")
-	else:
-		if frappe.db.sql("""select count(*) from tabUser where
-			HOUR(TIMEDIFF(CURRENT_TIMESTAMP, TIMESTAMP(modified)))=1""")[0][0] > 300:
-
-			frappe.respond_as_web_page(_('Temperorily Disabled'),
-				_('Too many users signed up recently, so the registration is disabled. Please try back in an hour'),
-				http_status_code=429)
-
-		from frappe.utils import random_string
-		user = frappe.get_doc({
-			"doctype":"User",
-			"email": email,
-			"first_name": full_name,
-			"enabled": 1,
-			"new_password": random_string(10),
-			"user_type": "Website User"
-		})
-		user.flags.ignore_permissions = True
-		user.insert()
-
-		# set default signup role as per Portal Settings
-		default_role = frappe.db.get_value("Portal Settings", None, "default_role")
-		if default_role:
-			user.add_roles(default_role)
-
-		if redirect_to:
-			frappe.cache().hset('redirect_after_login', user.name, redirect_to)
-
-		# TODO: Create a Hub Profile
-
-		user.send_welcome_mail_to_user()
-		return 1, _("Please check your email for verification")
-
-@frappe.whitelist(allow_guest=True)
-def pre_reg(site_name, protocol, route):
-
-	redirect_url = protocol + site_name + route
-	doc = frappe.get_doc({
-		'doctype': 'OAuth Client',
-		'app_name': site_name,
-		'scopes': 'all openid',
-		'default_redirect_uri': redirect_url,
-		'redirect_uris': redirect_url,
-		'response_type': 'Token',
-		'grant_type': 'Implicit',
-		'skip_authorization': 1
-	})
-
-	doc.insert(ignore_permissions=True)
-
-	return {
-		"client_id": doc.client_id,
-		"redirect_uri": redirect_url
-	}
+from log import update_hub_seller_activity, update_hub_item_view_log
 
 @frappe.whitelist(allow_guest=True)
 def register(profile):
@@ -139,87 +65,6 @@ def register(profile):
 		# 	'traceback': frappe.get_traceback()
 		# }
 
-### Queries
-def get_items(access_token, args):
-	"""Returns list of items by filters"""
-	# args["text"]=None, args["category"]=None, args["company"]=None, args["country"]=None, args["start"]=0, args["limit"]=50
-	hub_user = get_user(access_token)
-	fields = response_item_fields + ['hub_user', 'country', "company_id", "company_name", "site_name", "seller_city"]
-	filters = {
-		"published": "1",
-		"hub_user": ["!=", hub_user.name]
-	}
-
-	if hub_user.publish_pricing:
-		fields += ["price", "currency", "formatted_price"]
-	if hub_user.publish_availability:
-		fields += ["stock_qty"]
-
-	if args["item_codes"]:
-		item_codes = args["item_codes"]
-		items = []
-		for d in item_codes:
-			item_code = d[4:]
-			f = filters
-			f["item_code"] = item_code
-			items.append(frappe.get_all("Hub Item", fields=fields, filters=f)[0])
-		return {"items": items}
-
-	or_filters = [
-		{"item_name": ["like", "%{0}%".format(args["text"])]},
-		{"description": ["like", "%{0}%".format(args["text"])]}
-	]
-
-	# if args["hub_category"]:
-	# 	filters["hub_category"] = args["hub_category"]
-	if args["company_name"]:
-		filters["company_name"] = args["company_name"]
-	if args["country"]:
-		filters["country"] = args["country"]
-
-	order_by = ''
-	if args["order_by"]:
-		order_by = args["order_by"]
-
-	items = frappe.get_all("Hub Item", fields=fields, filters=filters, or_filters=or_filters,
-		limit_start = args["start"], limit_page_length = args["limit"], order_by=order_by)
-
-	return {"items": items}
-
-def get_all_companies(access_token):
-	all_company_fields = ["company_name", "hub_user", "country", "seller_city", "site_name", "seller_description"]
-	companies = frappe.get_all("Hub Company", fields=all_company_fields)
-	return {"companies": companies}
-
-def get_categories(access_token):
-	lft, rgt = frappe.db.get_value('Hub Category', {'name': 'All Categories'}, ['lft', 'rgt'])
-	categories = frappe.db.sql('''
-		select
-			hub_category_name from `tabHub Category`
-		where
-			lft >= {lft} and
-			rgt <= {rgt}
-	'''.format(lft=lft, rgt=rgt), as_dict=1)
-	# # TODO: Send catgory Object
-	# categories = frappe.get_all("Hub Category", fields=["category_name"])
-	return {"categories": categories}
-
-@frappe.whitelist(allow_guest=True)
-def get_item_details(hub_item_code):
-	hub_item = frappe.get_doc("Hub Item", {"hub_item_code": hub_item_code})
-	return hub_item.as_dict()
-
-def get_company_details(access_token, args):
-	hub_company = frappe.get_doc("Hub Company", {"name": args["company_id"]})
-	return {"company_details": hub_company.as_dict()}
-
-def get_all_users(access_token):
-	users = frappe.get_all("Hub User", fields=["hub_user", "country"])
-	return {"users": users}
-
-def get_user(access_token):
-	return frappe.get_doc("Hub User", {"access_token": access_token})
-
 @frappe.whitelist(allow_guest=True)
 def get_data_for_homepage(country=None):
 	'''
@@ -240,73 +85,22 @@ def get_data_for_homepage(country=None):
 		random_items = get_random_items_from_each_hub_seller() or []
 	)
 
-def get_items_by_country(country):
-	fields = get_item_fields()
-
-	items = frappe.get_all('Hub Item', fields=fields,
-		filters={
-			'country': ['like', '%' + country + '%']
-		}, limit=8)
-
-	return post_process_item_details(items)
-
-def get_random_items_from_each_hub_seller():
-	res = frappe.db.sql('''
-		SELECT * FROM (
-			SELECT
-				h.name AS hub_seller_name, h.name, i.name AS hub_item_code, i.item_name
-			FROM `tabHub Seller` h
-			INNER JOIN `tabHub Item` i ON h.name = i.hub_seller
-			ORDER BY RAND()
-		) AS shuffled_items
-		GROUP BY hub_seller_name;
-	''', as_dict=True)
-
-	hub_item_codes = [r.hub_item_code for r in res]
-
-	fields = get_item_fields()
-	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': ['in', hub_item_codes] })
-
-	return post_process_item_details(items)
-
-def get_items_with_images():
-	fields = get_item_fields()
-
-	items = frappe.get_all('Hub Item', fields=fields,
-		filters={
-			'image': ['like', 'http%']
-		}, limit=8)
-
-	return post_process_item_details(items)
-
 @frappe.whitelist()
-def get_items_by_keyword(keyword=None):
+def get_items(keyword=None, hub_seller=None):
 	'''
 	Get items by matching it with the keywords field
 	'''
 	fields = get_item_fields()
 
-	items = frappe.get_all('Hub Item', fields=fields,
-		filters={
-			'keywords': ['like', '%' + keyword + '%']
-		})
+	filters = {
+		'keywords': ['like', '%' + keyword + '%']
+	}
 
-	items = post_process_item_details(items)
-
-	return items
-
-@frappe.whitelist()
-def get_items_by_seller(hub_seller, keywords=''):
-	'''
-	Get items by the given Hub Seller
-	'''
-	fields = get_item_fields()
+	if hub_seller:
+		filters["hub_seller"] = hub_seller
 
 	items = frappe.get_all('Hub Item', fields=fields,
-		filters={
-			'hub_seller': hub_seller,
-			'keywords': ['like', '%' + keywords + '%']
-		})
+		filters=filters)
 
 	items = post_process_item_details(items)
 
@@ -314,17 +108,7 @@ def get_items_by_seller(hub_seller, keywords=''):
 
 @frappe.whitelist()
 def add_hub_seller_activity(hub_seller, activity_details):
-	activity_details = json.loads(activity_details)
-	doc = frappe.get_doc({
-		'doctype': 'Activity Log',
-		'user': hub_seller,
-		'status': activity_details.get('status', ''),
-		'subject': activity_details['subject'],
-		'content': activity_details.get('content', ''),
-		'reference_doctype': 'Hub Seller',
-		'reference_name': hub_seller
-	}).insert(ignore_permissions=True)
-	return doc
+	return update_hub_seller_activity(hub_seller, activity_details)
 
 @frappe.whitelist()
 def get_hub_seller_profile(hub_seller):
@@ -336,10 +120,11 @@ def get_hub_seller_profile(hub_seller):
 	return profile
 
 @frappe.whitelist(allow_guest=True)
-def get_item_details(hub_item_code):
+def get_item_details(hub_seller, hub_item_code):
 	fields = get_item_fields()
 	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': hub_item_code })
 	items = post_process_item_details(items)
+	update_hub_item_view_log(hub_seller, hub_item_code)
 	return items[0]
 
 @frappe.whitelist()
@@ -384,39 +169,6 @@ def get_categories(parent='All Categories'):
 @frappe.whitelist()
 def get_item_favourites():
 	return []
-
-def get_item_fields():
-	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
-
-def post_process_item_details(items):
-	items = get_item_details_and_company_name(items)
-
-	url = frappe.utils.get_url()
-	for item in items:
-		# convert relative path to absolute path
-		if item.image and item.image.startswith('/files/'):
-			item.image = url + item.image
-
-	return items
-
-def get_item_details_and_company_name(items):
-	for item in items:
-		res = frappe.db.get_all('Hub Item Review', fields=['AVG(rating) as average_rating, count(rating) as no_of_ratings'], filters={
-			'parenttype': 'Hub Item',
-			'parentfield': 'reviews',
-			'parent': item.name
-		})[0]
-
-		item.average_rating = res['average_rating']
-		item.no_of_ratings = res['no_of_ratings']
-
-		company, country, city = frappe.db.get_value('Hub Seller', item.hub_seller, ['company', 'country', 'city'])
-
-		item.company = company
-		item.country = country
-		item.city = city
-
-	return items
 
 @frappe.whitelist()
 def get_sellers_with_interactions(for_seller):

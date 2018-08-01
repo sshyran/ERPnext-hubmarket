@@ -4,6 +4,10 @@ def execute():
 	hub_items = frappe.get_all('Hub Item', fields=['name', 'seller', 'company_name', 'country', 'seller_city'])
 
 	for item in hub_items:
+
+		if not item.seller:
+			continue
+
 		hub_seller = frappe.get_doc({
 			'doctype': 'Hub Seller',
 			'user': item.seller,
