@@ -417,3 +417,51 @@ def get_item_details_and_company_name(items):
 		item.city = city
 
 	return items
+
+@frappe.whitelist()
+def get_sellers_with_interactions(for_seller):
+	'''Return all sellers `for_seller` has sent a message to or received a message from'''
+
+	res = frappe.db.sql('''
+		SELECT sender, receiver
+		FROM `tabHub Seller Message`
+		WHERE sender = %s OR receiver = %s
+	''', [for_seller, for_seller])
+
+	sellers = []
+	for row in res:
+		sellers += row
+
+	sellers = [seller for seller in sellers if seller != for_seller]
+
+	sellers_with_details = frappe.db.get_all('Hub Seller',
+		fields=['name as email', 'company'],
+		filters={'name': ['in', sellers]})
+
+	return sellers_with_details
+
+@frappe.whitelist()
+def get_messages(for_seller, against_seller):
+	'''Return all messages sent between `for_seller` and `against_seller`'''
+
+	messages = frappe.db.sql('''
+		SELECT name, sender, receiver, content
+		FROM `tabHub Seller Message`
+		WHERE
+			(sender = %(for_seller)s AND receiver = %(against_seller)s) OR
+			(sender = %(against_seller)s AND receiver = %(for_seller)s)
+		ORDER BY creation asc
+	''', { 'for_seller': for_seller, 'against_seller': against_seller }, as_dict=True)
+
+	return messages
+
+@frappe.whitelist()
+def send_message(from_seller, to_seller, message):
+	msg = frappe.get_doc({
+		'doctype': 'Hub Seller Message',
+		'sender': from_seller,
+		'receiver': to_seller,
+		'content': message
+	}).insert(ignore_permissions=True)
+
+	return msg
