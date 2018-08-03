@@ -86,14 +86,14 @@ def pre_reg(site_name, protocol, route):
 	}
 
 @frappe.whitelist(allow_guest=True)
-def register(email):
+def register(profile):
 	"""Register on the hub."""
 	try:
-		if email.lower() == 'administrator':
-			frappe.throw(_('Please login with another user'))
-			return
+		profile = frappe._dict(json.loads(profile))
 
 		password = random_string(16)
+		email = profile.company_email
+		company_name = profile.company
 
 		if frappe.db.exists('User', email):
 			user = frappe.get_doc('User', email)
@@ -105,7 +105,7 @@ def register(email):
 			user = frappe.get_doc({
 				'doctype': 'User',
 				'email': email,
-				'first_name': email.split("@")[0],
+				'first_name': company_name,
 				'new_password': password
 			})
 
@@ -113,19 +113,31 @@ def register(email):
 			user.flags.delay_emails = True
 			user.insert(ignore_permissions=True)
 
+			seller_data = profile.update({
+				'enabled': 1,
+				'doctype': 'Hub Seller',
+				'user': email,
+				'hub_seller_activity':[{'type': 'Created'}]
+			})
+			seller = frappe.get_doc(seller_data)
+			seller.insert(ignore_permissions=True)
+
+
 		return {
 			'email': email,
 			'password': password
 		}
 
-	except:
+	except Exception as e:
 		print("Hub Server Exception")
 		print(frappe.get_traceback())
 
-		return {
-			'error': "Hub Server Exception",
-			'traceback': frappe.get_traceback()
-		}
+		frappe.throw(frappe.get_traceback())
+
+		# return {
+		# 	'error': "Hub Server Exception",
+		# 	'traceback': frappe.get_traceback()
+		# }
 
 ### Queries
 def get_items(access_token, args):
@@ -192,9 +204,10 @@ def get_categories(access_token):
 	# categories = frappe.get_all("Hub Category", fields=["category_name"])
 	return {"categories": categories}
 
-def get_item_details(access_token, args):
-	hub_item = frappe.get_doc("Hub Item", {"item_code": args["item_code"]})
-	return {"item_details": hub_item.as_dict()}
+@frappe.whitelist(allow_guest=True)
+def get_item_details(hub_item_code):
+	hub_item = frappe.get_doc("Hub Item", {"hub_item_code": hub_item_code})
+	return hub_item.as_dict()
 
 def get_company_details(access_token, args):
 	hub_company = frappe.get_doc("Hub Company", {"name": args["company_id"]})
@@ -206,3 +219,201 @@ def get_all_users(access_token):
 
 def get_user(access_token):
 	return frappe.get_doc("Hub User", {"access_token": access_token})
+
+@frappe.whitelist(allow_guest=True)
+def get_data_for_homepage(country=None):
+	'''
+	Get curated item list for the homepage.
+	'''
+	fields = get_item_fields()
+	items = []
+
+	items_by_country = []
+	if country:
+		items_by_country += get_items_by_country(country)
+
+	items_with_images = get_items_with_images()
+
+	return dict(
+		items_by_country = items_by_country,
+		items_with_images = items_with_images or [],
+		random_items = get_random_items_from_each_hub_seller() or []
+	)
+
+def get_items_by_country(country):
+	fields = get_item_fields()
+
+	items = frappe.get_all('Hub Item', fields=fields,
+		filters={
+			'country': ['like', '%' + country + '%']
+		}, limit=8)
+
+	return post_process_item_details(items)
+
+def get_random_items_from_each_hub_seller():
+	res = frappe.db.sql('''
+		SELECT * FROM (
+			SELECT
+				h.name AS hub_seller_name, h.name, i.name AS hub_item_code, i.item_name
+			FROM `tabHub Seller` h
+			INNER JOIN `tabHub Item` i ON h.name = i.hub_seller
+			ORDER BY RAND()
+		) AS shuffled_items
+		GROUP BY hub_seller_name;
+	''', as_dict=True)
+
+	hub_item_codes = [r.hub_item_code for r in res]
+
+	fields = get_item_fields()
+	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': ['in', hub_item_codes] })
+
+	return post_process_item_details(items)
+
+def get_items_with_images():
+	fields = get_item_fields()
+
+	items = frappe.get_all('Hub Item', fields=fields,
+		filters={
+			'image': ['like', 'http%']
+		}, limit=8)
+
+	return post_process_item_details(items)
+
+@frappe.whitelist()
+def get_items_by_keyword(keyword=None):
+	'''
+	Get items by matching it with the keywords field
+	'''
+	fields = get_item_fields()
+
+	items = frappe.get_all('Hub Item', fields=fields,
+		filters={
+			'keywords': ['like', '%' + keyword + '%']
+		})
+
+	items = post_process_item_details(items)
+
+	return items
+
+@frappe.whitelist()
+def get_items_by_seller(hub_seller, keywords=''):
+	'''
+	Get items by the given Hub Seller
+	'''
+	fields = get_item_fields()
+
+	items = frappe.get_all('Hub Item', fields=fields,
+		filters={
+			'hub_seller': hub_seller,
+			'keywords': ['like', '%' + keywords + '%']
+		})
+
+	items = post_process_item_details(items)
+
+	return items
+
+@frappe.whitelist()
+def add_hub_seller_activity(hub_seller, activity_details):
+	activity_details = json.loads(activity_details)
+	doc = frappe.get_doc({
+		'doctype': 'Activity Log',
+		'user': hub_seller,
+		'status': activity_details.get('status', ''),
+		'subject': activity_details['subject'],
+		'content': activity_details.get('content', ''),
+		'reference_doctype': 'Hub Seller',
+		'reference_name': hub_seller
+	}).insert(ignore_permissions=True)
+	return doc
+
+@frappe.whitelist()
+def get_hub_seller_profile(hub_seller):
+	profile = frappe.get_doc("Hub Seller", hub_seller).as_dict()
+
+	for log in profile.hub_seller_activity:
+		log.pretty_date = frappe.utils.pretty_date(log.get('creation'))
+
+	return profile
+
+@frappe.whitelist(allow_guest=True)
+def get_item_details(hub_item_code):
+	fields = get_item_fields()
+	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': hub_item_code })
+	items = post_process_item_details(items)
+	return items[0]
+
+@frappe.whitelist()
+def get_item_reviews(hub_item_code):
+	reviews = frappe.db.get_all('Hub Item Review', fields=['*'],
+		filters={
+			'parenttype': 'Hub Item',
+			'parentfield': 'reviews',
+			'parent': hub_item_code
+		}, order_by='modified desc')
+
+	return reviews or []
+
+@frappe.whitelist()
+def add_item_review(hub_item_code, review):
+	'''Adds a review record for Hub Item and limits to 1 per user'''
+	new_review = json.loads(review)
+
+	item_doc = frappe.get_doc('Hub Item', hub_item_code)
+	existing_reviews = item_doc.get('reviews')
+
+	# dont allow more than 1 review
+	for review in existing_reviews:
+		if review.get('user') == new_review.get('user'):
+			return dict(error='Cannot add more than 1 review for the user {0}'.format(new_review.get('user')))
+
+	item_doc.append('reviews', new_review)
+	item_doc.save()
+
+	return item_doc.get('reviews')[-1]
+
+@frappe.whitelist()
+def get_categories(parent='All Categories'):
+	# get categories info with parent category and stuff
+	categories = frappe.get_all('Hub Category',
+		filters={'parent_hub_category': parent},
+		fields=['name'],
+		order_by='name asc')
+
+	return categories
+
+@frappe.whitelist()
+def get_item_favourites():
+	return []
+
+def get_item_fields():
+	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
+
+def post_process_item_details(items):
+	items = get_item_details_and_company_name(items)
+
+	url = frappe.utils.get_url()
+	for item in items:
+		# convert relative path to absolute path
+		if item.image and item.image.startswith('/files/'):
+			item.image = url + item.image
+
+	return items
+
+def get_item_details_and_company_name(items):
+	for item in items:
+		res = frappe.db.get_all('Hub Item Review', fields=['AVG(rating) as average_rating, count(rating) as no_of_ratings'], filters={
+			'parenttype': 'Hub Item',
+			'parentfield': 'reviews',
+			'parent': item.name
+		})[0]
+
+		item.average_rating = res['average_rating']
+		item.no_of_ratings = res['no_of_ratings']
+
+		company, country, city = frappe.db.get_value('Hub Seller', item.hub_seller, ['company', 'country', 'city'])
+
+		item.company = company
+		item.country = country
+		item.city = city
+
+	return items

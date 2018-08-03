@@ -8,4 +8,13 @@ from frappe.utils.nestedset import NestedSet
 from frappe.model.document import Document
 
 class HubCategory(NestedSet):
+	# nsm_parent_field = 'parent_hub_category'
+
+	# def autoname(self):
+	# 	self.name = self.hub_category_name
+	# 	print("================", self.name, self.nsm_parent_field)
+
+	# def on_update(self):
+	# 	NestedSet.on_update(self)
+
 	pass
