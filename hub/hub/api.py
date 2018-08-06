@@ -6,10 +6,20 @@ import frappe, json
 from frappe import _
 from frappe.utils import random_string
 
-from curation import (get_item_fields, post_process_item_details, get_items_by_country,
-	get_items_with_images, get_random_items_from_each_hub_seller)
+from curation import (
+	get_item_fields,
+	post_process_item_details,
+	get_items_by_country,
+	get_items_with_images,
+	get_random_items_from_each_hub_seller,
+	get_items_from_all_categories
+)
 
-from log import update_hub_seller_activity, update_hub_item_view_log, get_item_view_count
+from log import (
+	update_hub_seller_activity,
+	update_hub_item_view_log,
+	get_item_view_count
+)
 
 @frappe.whitelist(allow_guest=True)
 def register(profile):
@@ -82,7 +92,8 @@ def get_data_for_homepage(country=None):
 	return dict(
 		items_by_country = items_by_country,
 		items_with_images = items_with_images or [],
-		random_items = get_random_items_from_each_hub_seller() or []
+		random_items = get_random_items_from_each_hub_seller() or [],
+		category_items = get_items_from_all_categories() or []
 	)
 
 @frappe.whitelist()

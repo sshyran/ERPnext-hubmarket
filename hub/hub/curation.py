@@ -33,6 +33,24 @@ def get_random_items_from_each_hub_seller():
 
 	return post_process_item_details(items)
 
+def get_items_from_all_categories():
+	items_from_categories = {}
+
+	for category in [d.name for d in frappe.get_all('Hub Category', fields="name")]:
+		if frappe.db.count('Hub Item', filters={ 'hub_category': category }) > 20:
+			items_from_categories[category] = get_items_from_category(category)
+
+	return dict(items_from_categories)
+
+def get_items_from_category(category):
+	items = frappe.get_all(
+		'Hub Item',
+		fields=get_item_fields(),
+		filters={ 'image': ['not like', '%private%'], 'hub_category': category },
+		limit_page_length=8
+	)
+	return post_process_item_details(items)
+
 def get_items_with_images():
 	fields = get_item_fields()
 
