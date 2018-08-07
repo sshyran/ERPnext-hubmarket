@@ -47,7 +47,16 @@ def get_items_from_category(category):
 		'Hub Item',
 		fields=get_item_fields(),
 		filters={ 'image': ['not like', '%private%'], 'hub_category': category },
-		limit_page_length=8
+		limit_page_length = 4
+	)
+	return post_process_item_details(items)
+
+def get_items_from_hub_seller(hub_seller):
+	items = frappe.get_all(
+		'Hub Item',
+		fields = get_item_fields(),
+		filters = { 'image': ['not like', '%private%'], 'hub_seller': hub_seller },
+		limit_page_length = 8
 	)
 	return post_process_item_details(items)
 

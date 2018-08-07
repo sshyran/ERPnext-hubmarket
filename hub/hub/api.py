@@ -12,7 +12,8 @@ from curation import (
 	get_items_by_country,
 	get_items_with_images,
 	get_random_items_from_each_hub_seller,
-	get_items_from_all_categories
+	get_items_from_all_categories,
+	get_items_from_hub_seller
 )
 
 from log import (
@@ -115,8 +116,6 @@ def get_items(keyword='', hub_seller=None):
 
 	items = post_process_item_details(items)
 
-	print(items, hub_seller)
-
 	return items
 
 @frappe.whitelist()
@@ -124,11 +123,20 @@ def add_hub_seller_activity(hub_seller, activity_details):
 	return update_hub_seller_activity(hub_seller, activity_details)
 
 @frappe.whitelist()
-def get_hub_seller_profile(hub_seller='', company=''):
-	if hub_seller:
-		profile = frappe.get_doc("Hub Seller", hub_seller).as_dict()
+def get_hub_seller_page_info(hub_seller='', company=''):
+	if not hub_seller and company:
+		hub_seller = frappe.db.get_all("Hub Seller", filters={'company': company})[0].name
 	else:
-		profile = frappe.get_all("Hub Seller", fields=['*'], filters = {'company': company})[0]
+		frappe.throw('No Seller or Company Name received.')
+
+	return {
+		'profile': get_hub_seller_profile(hub_seller),
+		'items': get_items_from_hub_seller(hub_seller)
+	}
+
+@frappe.whitelist()
+def get_hub_seller_profile(hub_seller=''):
+	profile = frappe.get_doc("Hub Seller", hub_seller).as_dict()
 
 	if profile.hub_seller_activity:
 		for log in profile.hub_seller_activity:
