@@ -2,7 +2,10 @@ import frappe
 
 def execute():
 	hub_items = frappe.get_all('Hub Item', fields=['name', 'seller', 'company_name', 'country', 'seller_city'])
-
+	frappe.reload_doc('hub', 'doctype', 'hub_seller')
+	frappe.reload_doc('hub', 'doctype', 'hub_seller_activity')
+	frappe.reload_doc('hub', 'doctype', 'hub_seller_message')
+	frappe.reload_doc('hub', 'doctype', 'hub_item')
 	for item in hub_items:
 
 		if not item.seller:
