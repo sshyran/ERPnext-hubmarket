@@ -98,15 +98,16 @@ def get_data_for_homepage(country=None):
 	)
 
 @frappe.whitelist()
-def get_items(keyword='', hub_seller=None):
+def get_items(keyword='', hub_seller=None, filters={}):
 	'''
 	Get items by matching it with the keywords field
 	'''
 	fields = get_item_fields()
 
-	filters = {
-		'keywords': ['like', '%' + keyword + '%']
-	}
+	if type(filters) == unicode:
+		filters = json.loads(filters)
+
+	filters['keywords'] = ['like', '%' + keyword + '%']
 
 	if hub_seller:
 		filters["hub_seller"] = hub_seller
