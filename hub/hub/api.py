@@ -216,8 +216,6 @@ def get_categories(parent='All Categories'):
 								fields=['name'],
 								order_by='name asc')
 
-	print("====================================", categories)
-
 	return categories
 
 
