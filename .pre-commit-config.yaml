@@ -1,9 +1,8 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v1.2.3
-    hooks:
-    # -   id: autopep8-wrapper
-    -   id: pretty-format-json
+# -   repo: https://github.com/pre-commit/pre-commit-hooks
+#     rev: v1.2.3
+#     hooks:
+#     -   id: autopep8-wrapper
 -   repo: https://github.com/pre-commit/mirrors-eslint
     rev: v5.0.1
     hooks:
