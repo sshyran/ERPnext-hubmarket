@@ -155,7 +155,7 @@ def get_hub_seller_profile(hub_seller=''):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_item_details(hub_seller, hub_item_code):
+def get_item_details(hub_item_code, hub_seller):
 	fields = get_item_fields()
 	items = frappe.get_all('Hub Item', fields=fields,
 						   filters={'name': hub_item_code})
@@ -164,14 +164,14 @@ def get_item_details(hub_seller, hub_item_code):
 
 	item['view_count'] = get_item_view_count(hub_item_code)
 
-	update_hub_item_view_log(hub_seller, hub_item_code)
+	update_hub_item_view_log(hub_item_code, hub_seller)
 	return item
 
 
 @frappe.whitelist()
 def get_item_reviews(hub_item_code):
 	reviews = frappe.db.get_all('Hub Item Review', fields=['*'],
-								filters={
+	filters={
 		'parenttype': 'Hub Item',
 		'parentfield': 'reviews',
 		'parent': hub_item_code
@@ -181,12 +181,13 @@ def get_item_reviews(hub_item_code):
 
 
 @frappe.whitelist()
-def add_item_to_seller_favourites(hub_seller, hub_item_code):
-	update_hub_item_favourite_log(hub_seller, hub_item_code, 1)
+def add_item_to_seller_favourites(hub_item_code, hub_seller):
+	update_hub_item_favourite_log(hub_item_code, hub_seller, 1)
+
 
 @frappe.whitelist()
-def remove_item_from_seller_favourites(hub_seller, hub_item_code):
-	update_hub_item_favourite_log(hub_seller, hub_item_code, 0)
+def remove_item_from_seller_favourites(hub_item_code, hub_seller):
+	update_hub_item_favourite_log(hub_item_code, hub_seller, 0)
 
 
 @frappe.whitelist()
