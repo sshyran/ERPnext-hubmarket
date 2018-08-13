@@ -4,16 +4,24 @@
 from __future__ import unicode_literals
 import frappe
 
+def post_process_items(fn):
+	def wrapper(*args, **kwargs):
+		return post_process_item_details(fn(*args, **kwargs))
+
+	return wrapper
+
+
+@post_process_items
 def get_items_by_country(country):
 	fields = get_item_fields()
 
-	items = frappe.get_all('Hub Item', fields=fields,
+	return frappe.get_all('Hub Item', fields=fields,
 		filters={
 			'country': ['like', '%' + country + '%']
 		}, limit=8)
 
-	return post_process_item_details(items)
 
+@post_process_items
 def get_random_items_from_each_hub_seller():
 	res = frappe.db.sql('''
 		SELECT * FROM (
@@ -29,9 +37,8 @@ def get_random_items_from_each_hub_seller():
 	hub_item_codes = [r.hub_item_code for r in res]
 
 	fields = get_item_fields()
-	items = frappe.get_all('Hub Item', fields=fields, filters={ 'name': ['in', hub_item_codes] })
+	return frappe.get_all('Hub Item', fields=fields, filters={ 'name': ['in', hub_item_codes] })
 
-	return post_process_item_details(items)
 
 def get_items_from_all_categories():
 	items_from_categories = {}
@@ -42,33 +49,45 @@ def get_items_from_all_categories():
 
 	return dict(items_from_categories)
 
+
+@post_process_items
 def get_items_from_category(category):
-	items = frappe.get_all(
+	return frappe.get_all(
 		'Hub Item',
 		fields=get_item_fields(),
 		filters={ 'image': ['not like', '%private%'], 'hub_category': category },
 		limit_page_length = 4
 	)
-	return post_process_item_details(items)
 
+
+@post_process_items
 def get_items_from_hub_seller(hub_seller):
-	items = frappe.get_all(
+	return frappe.get_all(
 		'Hub Item',
 		fields = get_item_fields(),
 		filters = { 'image': ['not like', '%private%'], 'hub_seller': hub_seller },
 		limit_page_length = 8
 	)
-	return post_process_item_details(items)
 
+
+@post_process_items
 def get_items_with_images():
 	fields = get_item_fields()
 
-	items = frappe.get_all('Hub Item', fields=fields,
+	return frappe.get_all('Hub Item', fields=fields,
 		filters={
 			'image': ['like', 'http%']
 		}, limit=8)
 
-	return post_process_item_details(items)
+
+@post_process_items
+def get_items_from_codes(item_codes):
+	return frappe.get_all('Hub Item', fields=get_item_fields(), filters={
+			'hub_item_code': ['in', item_codes],
+		},
+		order_by = 'modified desc'
+	)
+
 
 def post_process_item_details(items):
 	items = get_item_details_and_company_name(items)
@@ -81,17 +100,10 @@ def post_process_item_details(items):
 
 	return items
 
-def get_items_from_codes(item_codes):
-	items = frappe.get_all('Hub Item', fields=get_item_fields(), filters={
-			'hub_item_code': ['in', item_codes],
-		},
-		order_by = 'modified desc'
-	)
-
-	return post_process_item_details(items)
 
 def get_item_fields():
 	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
+
 
 def get_item_details_and_company_name(items):
 	for item in items:
