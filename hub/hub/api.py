@@ -14,14 +14,16 @@ from curation import (
 	get_items_with_images,
 	get_random_items_from_each_hub_seller,
 	get_items_from_all_categories,
-	get_items_from_hub_seller
+	get_items_from_hub_seller,
+	get_items_from_codes
 )
 
 from log import (
 	update_hub_seller_activity,
 	update_hub_item_view_log,
 	get_item_view_count,
-	update_hub_item_favourite_log
+	mutate_hub_item_favourite_log,
+	get_favourite_item_logs_seller
 )
 
 
@@ -182,12 +184,14 @@ def get_item_reviews(hub_item_code):
 
 @frappe.whitelist()
 def add_item_to_seller_favourites(hub_item_code, hub_seller):
-	update_hub_item_favourite_log(hub_item_code, hub_seller, 1)
+	# Cardinal sin
+	mutate_hub_item_favourite_log(hub_item_code, hub_seller, 1)
 
 
 @frappe.whitelist()
 def remove_item_from_seller_favourites(hub_item_code, hub_seller):
-	update_hub_item_favourite_log(hub_item_code, hub_seller, 0)
+	# Cardinal sin
+	mutate_hub_item_favourite_log(hub_item_code, hub_seller, 0)
 
 
 @frappe.whitelist()
@@ -221,8 +225,10 @@ def get_categories(parent='All Categories'):
 
 
 @frappe.whitelist()
-def get_item_favourites():
-	return []
+def get_favourite_items_of_seller(hub_seller):
+	item_logs = get_favourite_item_logs_seller(hub_seller)
+	favourite_item_codes = [d.primary_document for d in item_logs]
+	return get_items_from_codes(favourite_item_codes)
 
 
 @frappe.whitelist()

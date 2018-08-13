@@ -81,6 +81,15 @@ def post_process_item_details(items):
 
 	return items
 
+def get_items_from_codes(item_codes):
+	items = frappe.get_all('Hub Item', fields=get_item_fields(), filters={
+			'hub_item_code': ['in', item_codes],
+		},
+		order_by = 'modified desc'
+	)
+
+	return post_process_item_details(items)
+
 def get_item_fields():
 	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
 
