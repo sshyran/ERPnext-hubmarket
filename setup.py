@@ -12,8 +12,6 @@ with open('hub/__init__.py', 'rb') as f:
     version = str(ast.literal_eval(_version_re.search(
         f.read().decode('utf-8')).group(1)))
 
-requirements = parse_requirements("requirements.txt", session="")
-
 setup(
 	name='hub',
 	version=version,
