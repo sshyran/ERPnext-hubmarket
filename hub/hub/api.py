@@ -23,6 +23,7 @@ from log import (
 	update_hub_item_view_log,
 	get_item_view_count,
 	mutate_hub_item_favourite_log,
+	get_favourite_logs_seller,
 	get_favourite_item_logs_seller
 )
 
@@ -80,6 +81,22 @@ def register(profile):
 		# 	'traceback': frappe.get_traceback()
 		# }
 
+
+@frappe.whitelist()
+def update_profile(hub_seller, updated_profile):
+	'''
+	Update Seller Profile
+	'''
+
+	updated_profile = json.loads(updated_profile)
+
+	profile = frappe.get_doc("Hub Seller", hub_seller)
+	if updated_profile.get('company_description') != profile.company_description:
+		profile.company_description = updated_profile.get('company_description')
+
+	profile.save()
+
+	return profile.as_dict()
 
 @frappe.whitelist(allow_guest=True)
 def get_data_for_homepage(country=None):
@@ -164,6 +181,11 @@ def get_item_details(hub_item_code, hub_seller):
 	items = post_process_item_details(items)
 	item = items[0]
 
+	logs = get_favourite_item_logs_seller(hub_item_code, hub_seller)
+
+	if len(logs):
+		item['favourited'] = 1
+
 	item['view_count'] = get_item_view_count(hub_item_code)
 
 	update_hub_item_view_log(hub_item_code, hub_seller)
@@ -185,13 +207,13 @@ def get_item_reviews(hub_item_code):
 @frappe.whitelist()
 def add_item_to_seller_favourites(hub_item_code, hub_seller):
 	# Cardinal sin
-	mutate_hub_item_favourite_log(hub_item_code, hub_seller, 1)
+	return mutate_hub_item_favourite_log(hub_item_code, hub_seller, 1)
 
 
 @frappe.whitelist()
 def remove_item_from_seller_favourites(hub_item_code, hub_seller):
 	# Cardinal sin
-	mutate_hub_item_favourite_log(hub_item_code, hub_seller, 0)
+	return mutate_hub_item_favourite_log(hub_item_code, hub_seller, 0)
 
 
 @frappe.whitelist()
@@ -226,7 +248,7 @@ def get_categories(parent='All Categories'):
 
 @frappe.whitelist()
 def get_favourite_items_of_seller(hub_seller):
-	item_logs = get_favourite_item_logs_seller(hub_seller)
+	item_logs = get_favourite_logs_seller(hub_seller)
 	favourite_item_codes = [d.primary_document for d in item_logs]
 	return get_items_from_codes(favourite_item_codes)
 
