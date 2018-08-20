@@ -176,21 +176,26 @@ def get_hub_seller_profile(hub_seller=''):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_item_details(hub_item_code, hub_seller=None):
+def get_item_details(hub_item_code):
 	fields = get_item_fields()
-	items = frappe.get_all('Hub Item', fields=fields,
-						   filters={'name': hub_item_code})
+	items = frappe.get_all('Hub Item', fields=fields, filters={'name': hub_item_code})
+
+	if not items:
+		return None
+
 	items = post_process_item_details(items)
 	item = items[0]
 
-	logs = get_favourite_item_logs_seller(hub_item_code, hub_seller)
+	# frappe.session.user is the hub_seller if not Guest
+	hub_seller = frappe.session.user if frappe.session.user != 'Guest' else None
 
+	if hub_seller:
+		logs = get_favourite_item_logs_seller(hub_item_code, hub_seller)
 	if len(logs):
 		item['favourited'] = 1
 
 	item['view_count'] = get_item_view_count(hub_item_code)
 
-	# hub seller can be None, when guest is viewing
 	if hub_seller:
 		update_hub_item_view_log(hub_item_code, hub_seller)
 
