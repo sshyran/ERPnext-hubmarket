@@ -6,8 +6,9 @@ import frappe
 import json
 from frappe import _
 from frappe.utils import random_string
+from six import string_types
 
-from curation import (
+from .curation import (
 	get_item_fields,
 	post_process_item_details,
 	get_items_by_country,
@@ -18,7 +19,7 @@ from curation import (
 	get_items_from_codes
 )
 
-from log import (
+from .log import (
 	update_hub_seller_activity,
 	update_hub_item_view_log,
 	get_item_view_count,
@@ -127,7 +128,7 @@ def get_items(keyword='', hub_seller=None, filters={}):
 	'''
 	fields = get_item_fields()
 
-	if type(filters) == unicode:
+	if isinstance(filters, string_types):
 		filters = json.loads(filters)
 
 	filters['keywords'] = ['like', '%' + keyword + '%']
