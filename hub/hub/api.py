@@ -121,7 +121,7 @@ def get_data_for_homepage(country=None):
 	)
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_items(keyword='', hub_seller=None, filters={}):
 	'''
 	Get items by matching it with the keywords field
@@ -131,13 +131,13 @@ def get_items(keyword='', hub_seller=None, filters={}):
 	if isinstance(filters, string_types):
 		filters = json.loads(filters)
 
-	filters['keywords'] = ['like', '%' + keyword + '%']
+	if keyword:
+		filters['keywords'] = ['like', '%' + keyword + '%']
 
 	if hub_seller:
 		filters["hub_seller"] = hub_seller
 
-	items = frappe.get_all('Hub Item', fields=fields,
-						   filters=filters)
+	items = frappe.get_all('Hub Item', fields=fields, filters=filters)
 
 	items = post_process_item_details(items)
 
@@ -149,7 +149,7 @@ def add_hub_seller_activity(hub_seller, activity_details):
 	return update_hub_seller_activity(hub_seller, activity_details)
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_hub_seller_page_info(hub_seller='', company=''):
 	if not hub_seller and company:
 		hub_seller = frappe.db.get_all(
@@ -175,7 +175,7 @@ def get_hub_seller_profile(hub_seller=''):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_item_details(hub_item_code, hub_seller):
+def get_item_details(hub_item_code, hub_seller=None):
 	fields = get_item_fields()
 	items = frappe.get_all('Hub Item', fields=fields,
 						   filters={'name': hub_item_code})
@@ -189,11 +189,14 @@ def get_item_details(hub_item_code, hub_seller):
 
 	item['view_count'] = get_item_view_count(hub_item_code)
 
-	update_hub_item_view_log(hub_item_code, hub_seller)
+	# hub seller can be None, when guest is viewing
+	if hub_seller:
+		update_hub_item_view_log(hub_item_code, hub_seller)
+
 	return item
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_item_reviews(hub_item_code):
 	reviews = frappe.db.get_all('Hub Item Review', fields=['*'],
 	filters={
@@ -236,7 +239,7 @@ def add_item_review(hub_item_code, review):
 	return item_doc.get('reviews')[-1]
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_categories(parent='All Categories'):
 	# get categories info with parent category and stuff
 	categories = frappe.get_all('Hub Category',
@@ -271,8 +274,7 @@ def get_sellers_with_interactions(for_seller):
 	sellers = [seller for seller in sellers if seller != for_seller]
 
 	sellers_with_details = frappe.db.get_all('Hub Seller',
-											 fields=[
-												 'name as email', 'company'],
+											 fields=['name as email', 'company'],
 											 filters={'name': ['in', sellers]})
 
 	return sellers_with_details
