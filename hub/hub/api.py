@@ -191,8 +191,8 @@ def get_item_details(hub_item_code):
 
 	if hub_seller:
 		logs = get_favourite_item_logs_seller(hub_item_code, hub_seller)
-	if len(logs):
-		item['favourited'] = 1
+		if len(logs):
+			item['favourited'] = 1
 
 	item['view_count'] = get_item_view_count(hub_item_code)
 
@@ -287,17 +287,20 @@ def get_sellers_with_interactions(for_seller):
 
 
 @frappe.whitelist()
-def get_messages(for_seller, against_seller):
+def get_messages(against_seller, against_item):
 	'''Return all messages sent between `for_seller` and `against_seller`'''
 
+	for_seller = frappe.session.user
+
 	messages = frappe.db.sql('''
-		SELECT name, sender, receiver, content
+		SELECT name, sender, receiver, content, creation
 		FROM `tabHub Seller Message`
 		WHERE
-			(sender = %(for_seller)s AND receiver = %(against_seller)s) OR
-			(sender = %(against_seller)s AND receiver = %(for_seller)s)
+			((sender = %(for_seller)s AND receiver = %(against_seller)s) OR
+			(sender = %(against_seller)s AND receiver = %(for_seller)s)) AND
+			reference_hub_item = %(hub_item_code)s
 		ORDER BY creation asc
-	''', {'for_seller': for_seller, 'against_seller': against_seller}, as_dict=True)
+	''', {'for_seller': for_seller, 'against_seller': against_seller, 'hub_item_code': against_item}, as_dict=True)
 
 	return messages
 
