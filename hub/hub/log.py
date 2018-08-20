@@ -66,6 +66,9 @@ def mutate_hub_item_favourite_log(hub_item_code, hub_seller, favourited=1):
 
 	is_own_item_of_seller = hub_seller == hub_item_seller
 
+	if is_own_item_of_seller:
+		return
+
 	existing_logs = frappe.db.get_all('Hub Log', filters={
 		'primary_doctype': 'Hub Item',
 		'primary_document': hub_item_code,
@@ -75,20 +78,17 @@ def mutate_hub_item_favourite_log(hub_item_code, hub_seller, favourited=1):
 
 	latest_log = existing_logs[0] if len(existing_logs) else ''
 
-	if not is_own_item_of_seller:
-		if latest_log:
-			frappe.db.set_value('Hub Log', latest_log.get('name'), 'type', log_type)
-		else:
-			frappe.get_doc({
-				'doctype': 'Hub Log',
-
-				'type': log_type,
-
-				'primary_doctype': 'Hub Item',
-				'primary_document': hub_item_code,
-				'secondary_doctype': 'Hub Seller',
-				'secondary_document': hub_seller
-			}).insert(ignore_permissions=True)
+	if latest_log:
+		frappe.db.set_value('Hub Log', latest_log.get('name'), 'type', log_type)
+	else:
+		frappe.get_doc({
+			'doctype': 'Hub Log',
+			'type': log_type,
+			'primary_doctype': 'Hub Item',
+			'primary_document': hub_item_code,
+			'secondary_doctype': 'Hub Seller',
+			'secondary_document': hub_seller
+		}).insert(ignore_permissions=True)
 
 
 def get_favourite_item_logs_seller(hub_seller):

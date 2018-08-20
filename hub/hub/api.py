@@ -10,6 +10,7 @@ from frappe.utils import random_string
 from curation import (
 	get_item_fields,
 	post_process_item_details,
+	post_process_items,
 	get_items_by_country,
 	get_items_with_images,
 	get_random_items_from_each_hub_seller,
@@ -113,13 +114,13 @@ def get_items(keyword='', hub_seller=None, filters={}):
 	if type(filters) == unicode:
 		filters = json.loads(filters)
 
-	filters['keywords'] = ['like', '%' + keyword + '%']
+	if keyword:
+		filters['keywords'] = ['like', '%' + keyword + '%']
 
 	if hub_seller:
 		filters["hub_seller"] = hub_seller
 
-	items = frappe.get_all('Hub Item', fields=fields,
-						   filters=filters)
+	items = frappe.get_all('Hub Item', fields=fields, filters=filters)
 
 	items = post_process_item_details(items)
 
@@ -270,14 +271,65 @@ def get_messages(for_seller, against_seller):
 
 	return messages
 
+@frappe.whitelist()
+def get_buying_items_for_messages(hub_seller=None):
+	if not hub_seller:
+		hub_seller = frappe.session.user
+
+	validate_session_user(hub_seller)
+
+	items = frappe.db.get_all('Hub Seller Message',
+		fields='reference_hub_item',
+		filters={
+			'sender': hub_seller,
+			'reference_hub_seller': ('!=', hub_seller)
+		},
+		group_by='reference_hub_item'
+	)
+
+	item_names = [item.reference_hub_item for item in items]
+
+	return get_items(filters={
+		'hub_item_code': ['in', item_names]
+	})
 
 @frappe.whitelist()
-def send_message(from_seller, to_seller, message):
+def get_selling_items_for_messages(hub_seller=None):
+	if not hub_seller:
+		hub_seller = frappe.session.user
+
+	validate_session_user(hub_seller)
+
+	items = frappe.db.get_all('Hub Seller Message',
+		fields='reference_hub_item',
+		filters={
+			'receiver': hub_seller,
+			'reference_hub_seller': hub_seller
+		},
+		group_by='reference_hub_item'
+	)
+
+	item_names = [item.reference_hub_item for item in items]
+
+	return get_items(filters={
+		'hub_item_code': ['in', item_names]
+	})
+
+
+@frappe.whitelist()
+def send_message(from_seller, to_seller, message, hub_item):
+	validate_session_user(from_seller)
+
 	msg = frappe.get_doc({
 		'doctype': 'Hub Seller Message',
 		'sender': from_seller,
 		'receiver': to_seller,
-		'content': message
+		'content': message,
+		'reference_hub_item': hub_item
 	}).insert(ignore_permissions=True)
 
 	return msg
+
+def validate_session_user(user):
+	if frappe.session.user != user:
+		frappe.throw(_('Not Permitted'), frappe.PermissionError)

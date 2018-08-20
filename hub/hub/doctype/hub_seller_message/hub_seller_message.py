@@ -7,4 +7,6 @@ import frappe
 from frappe.model.document import Document
 
 class HubSellerMessage(Document):
-	pass
+	def validate(self):
+		if self.sender == self.receiver:
+			frappe.throw(_('Sender cannot be the same as Receiver'))
