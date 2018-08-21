@@ -19,7 +19,7 @@ class HubItem(WebsiteGenerator):
 		self.name = autoname_increment_by_field(self.doctype, 'hub_item_code', self.name)
 
 	def validate(self):
-		site_name = frappe.db.get_value('Hub Company', self.company_name, 'site_name')
+		# site_name = frappe.db.get_value('Hub Company', self.company_name, 'site_name')
 		# if self.image and self.image.startswith('/') and site_name not in self.image:
 		# 	self.image = '//' + site_name + self.image
 
@@ -51,11 +51,15 @@ class HubItem(WebsiteGenerator):
 		self.keywords = (" ").join(keywords)
 
 	def extract_image_from_base64(self):
-		image_file_name = self.get('image_file_name', None)
+		if self.image and self.image.startswith('{'):
+			self.image = json.loads(self.image)
 
-		if image_file_name and self.image and not is_valid_file_url(self.image):
-			f = save_file(image_file_name, self.image, self.doctype, self.name, decode=True)
-			self.image = f.file_url
+			image_file_name = self.image['file_name']
+			base64 = self.image['base64']
+
+			if image_file_name and base64 and not is_valid_file_url(base64):
+				f = save_file(image_file_name, base64, self.doctype, self.name, decode=True)
+				self.image = f.file_url
 
 	def get_context(self, context):
 		context.no_cache = True
