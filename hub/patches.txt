@@ -1,1 +1,2 @@
 hub.patches.v0_0_1.move_seller_info_to_hub_seller
+hub.patches.v0_0_1.set_keywords_for_hub_item_if_missing
