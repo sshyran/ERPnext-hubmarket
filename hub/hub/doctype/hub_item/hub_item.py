@@ -74,5 +74,5 @@ def get_list_context(context):
 def is_valid_file_url(file_url):
 	'''Check if url is a valid relative url or absolute url'''
 	return (file_url.startswith('/files')
-			or file_url.startswith('/private/files')
-			or file_url.startswith('http'))
+		or file_url.startswith('/private/files')
+		or file_url.startswith('http'))
