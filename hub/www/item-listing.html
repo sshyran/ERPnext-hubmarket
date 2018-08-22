@@ -1,9 +1,20 @@
 {% extends "templates/web.html" %}
 {% block title %}Products{% endblock %}
 {% block page_content %}
+<section class="top-section after-splash">
+    <div class="row">
+      <div class="col">
+        <div class="input-group">
+            <input type="text" class="form-control item-search-input" placeholder="Search for..." {% if frappe.form_dict.search %}value="{{frappe.form_dict.search}}"{% endif %}>
+        </div>
+      </div>
+    </div>
+</section>
+{% if items|length > 0 %}
 <section class='section-padding splash'
     style='background-image: url({{items.0.image}})'>
 </section>
+{% endif %}
 <section class="top-section after-splash">
     <div class="container">
         <h1>Products</h1>
@@ -16,9 +27,9 @@
 <div class="container">
     <nav aria-label="Products pages">
         <ul class="pagination">
-            <li class="page-item {% if not paginator.has_prev_page %}disabled{% endif %}"><a class="page-link" href="/item-listing/?page_number={{paginator.page_number - 1}}">Previous</a></li>
+            <li class="page-item {% if not paginator.has_prev_page %}disabled{% endif %}"><a class="page-link" href="/item-listing/?page_number={{paginator.page_number - 1}}{% if frappe.form_dict.search %}&search={{frappe.form_dict.search}}{% endif %}">Previous</a></li>
             <li class="page-item active"><a class="page-link" href="">{{paginator.page_number}}</a></li>
-            <li class="page-item {% if not paginator.has_next_page %}disabled{% endif %}"><a class="page-link" href="/item-listing/?page_number={{paginator.page_number + 1}}">Next</a></li>
+            <li class="page-item {% if not paginator.has_next_page %}disabled{% endif %}"><a class="page-link" href="/item-listing/?page_number={{paginator.page_number + 1}}{% if frappe.form_dict.search %}&search={{frappe.form_dict.search}}{% endif %}">Next</a></li>
         </ul>
     </nav>
 </div>
