@@ -303,7 +303,7 @@ def get_messages(against_seller, against_item, order_by='creation asc', limit=No
 	return messages
 
 @frappe.whitelist()
-def get_buying_items_for_messages(hub_seller=None, include_recent_message=True):
+def get_buying_items_for_messages(hub_seller=None):
 	if not hub_seller:
 		hub_seller = frappe.session.user
 
@@ -324,14 +324,8 @@ def get_buying_items_for_messages(hub_seller=None, include_recent_message=True):
 		'hub_item_code': ['in', item_names]
 	})
 
-	if include_recent_message:
-		def get_recent_message(item):
-			message = get_messages(item.hub_seller, item.hub_item_code, limit=1, order_by='creation desc')
-			message_object = message[0] if message else {}
-			return message_object
-
-		for item in items:
-			item['recent_message'] = get_recent_message(item)
+	for item in items:
+		item['recent_message'] = get_recent_message(item)
 
 	return items
 
@@ -353,9 +347,14 @@ def get_selling_items_for_messages(hub_seller=None):
 
 	item_names = [item.reference_hub_item for item in items]
 
-	return get_items(filters={
+	items = get_items(filters={
 		'hub_item_code': ['in', item_names]
 	})
+
+	for item in items:
+		item['recent_message'] = get_recent_message(item)
+
+	return items
 
 
 @frappe.whitelist()
@@ -375,3 +374,8 @@ def send_message(from_seller, to_seller, message, hub_item):
 def validate_session_user(user):
 	if frappe.session.user != user:
 		frappe.throw(_('Not Permitted'), frappe.PermissionError)
+
+def get_recent_message(item):
+	message = get_messages(item.hub_seller, item.hub_item_code, limit=1, order_by='creation desc')
+	message_object = message[0] if message else {}
+	return message_object
