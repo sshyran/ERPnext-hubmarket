@@ -287,20 +287,18 @@ def get_sellers_with_interactions(for_seller):
 
 
 @frappe.whitelist()
-def get_messages(against_seller, against_item):
+def get_messages(against_seller, against_item, order_by='creation asc', limit=None):
 	'''Return all messages sent between `for_seller` and `against_seller`'''
 
 	for_seller = frappe.session.user
 
-	messages = frappe.db.sql('''
-		SELECT name, sender, receiver, content, creation
-		FROM `tabHub Seller Message`
-		WHERE
-			((sender = %(for_seller)s AND receiver = %(against_seller)s) OR
-			(sender = %(against_seller)s AND receiver = %(for_seller)s)) AND
-			reference_hub_item = %(hub_item_code)s
-		ORDER BY creation asc
-	''', {'for_seller': for_seller, 'against_seller': against_seller, 'hub_item_code': against_item}, as_dict=True)
+	messages = frappe.get_all('Hub Seller Message',
+		fields=['name', 'sender', 'receiver', 'content', 'creation'],
+		filters={
+			'sender': ['in', (for_seller, against_seller)],
+			'receiver': ['in', (for_seller, against_seller)],
+			'reference_hub_item': against_item,
+		}, limit=limit, order_by=order_by)
 
 	return messages
 
