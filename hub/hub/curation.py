@@ -116,10 +116,11 @@ def get_item_details_and_company_name(items):
 		item.average_rating = res['average_rating']
 		item.no_of_ratings = res['no_of_ratings']
 
-		company, country, city = frappe.db.get_value('Hub Seller', item.hub_seller, ['company', 'country', 'city'])
+		if item.hub_seller:
+			company, country, city = frappe.db.get_value('Hub Seller', item.hub_seller, ['company', 'country', 'city'])
 
-		item.company = company
-		item.country = country
-		item.city = city
+			item.company = company
+			item.country = country
+			item.city = city
 
 	return items
