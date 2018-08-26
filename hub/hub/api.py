@@ -331,6 +331,7 @@ def get_buying_items_for_messages(hub_seller=None):
 
 @frappe.whitelist()
 def get_selling_items_for_messages(hub_seller=None):
+	# TODO: Refactor (get_all calls seems redundant)
 	if not hub_seller:
 		hub_seller = frappe.session.user
 
@@ -340,7 +341,6 @@ def get_selling_items_for_messages(hub_seller=None):
 		fields='reference_hub_item',
 		filters={
 			'receiver': hub_seller,
-			'reference_hub_seller': hub_seller
 		},
 		group_by='reference_hub_item'
 	)
@@ -352,7 +352,12 @@ def get_selling_items_for_messages(hub_seller=None):
 	})
 
 	for item in items:
-		item['recent_message'] = get_recent_message(item)
+		item['received_messages'] = frappe.get_all('Hub Seller Message',
+			fields=['sender', 'receiver', 'content', 'creation'],
+			filters={
+				'receiver': hub_seller,
+				'reference_hub_item': item.name
+			}, distinct=True, order_by='creation DESC')
 
 	return items
 
