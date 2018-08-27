@@ -16,7 +16,7 @@ class HubItem(WebsiteGenerator):
 	def autoname(self):
 		super(HubItem, self).autoname()
 		self.hub_item_code = self.name
-		self.name = autoname_increment_by_field(self.doctype, 'hub_item_code', self.name)
+		self.name = frappe.generate_hash(self.doctype, 10)
 
 	def validate(self):
 		# site_name = frappe.db.get_value('Hub Company', self.company_name, 'site_name')
