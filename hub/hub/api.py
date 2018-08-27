@@ -176,9 +176,9 @@ def get_hub_seller_profile(hub_seller=''):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_item_details(hub_item_code):
+def get_item_details(hub_item_name):
 	fields = get_item_fields()
-	items = frappe.get_all('Hub Item', fields=fields, filters={'name': hub_item_code})
+	items = frappe.get_all('Hub Item', fields=fields, filters={'name': hub_item_name})
 
 	if not items:
 		return None
@@ -190,48 +190,48 @@ def get_item_details(hub_item_code):
 	hub_seller = frappe.session.user if frappe.session.user != 'Guest' else None
 
 	if hub_seller:
-		logs = get_favourite_item_logs_seller(hub_item_code, hub_seller)
+		logs = get_favourite_item_logs_seller(hub_item_name, hub_seller)
 		if len(logs):
 			item['favourited'] = 1
 
-	item['view_count'] = get_item_view_count(hub_item_code)
+	item['view_count'] = get_item_view_count(hub_item_name)
 
 	if hub_seller:
-		update_hub_item_view_log(hub_item_code, hub_seller)
+		update_hub_item_view_log(hub_item_name, hub_seller)
 
 	return item
 
 
 @frappe.whitelist(allow_guest=True)
-def get_item_reviews(hub_item_code):
+def get_item_reviews(hub_item_name):
 	reviews = frappe.db.get_all('Hub Item Review', fields=['*'],
 	filters={
 		'parenttype': 'Hub Item',
 		'parentfield': 'reviews',
-		'parent': hub_item_code
+		'parent': hub_item_name
 	}, order_by='modified desc')
 
 	return reviews or []
 
 
 @frappe.whitelist()
-def add_item_to_seller_favourites(hub_item_code, hub_seller):
+def add_item_to_seller_favourites(hub_item_name, hub_seller):
 	# Cardinal sin
-	return mutate_hub_item_favourite_log(hub_item_code, hub_seller, 1)
+	return mutate_hub_item_favourite_log(hub_item_name, hub_seller, 1)
 
 
 @frappe.whitelist()
-def remove_item_from_seller_favourites(hub_item_code, hub_seller):
+def remove_item_from_seller_favourites(hub_item_name, hub_seller):
 	# Cardinal sin
-	return mutate_hub_item_favourite_log(hub_item_code, hub_seller, 0)
+	return mutate_hub_item_favourite_log(hub_item_name, hub_seller, 0)
 
 
 @frappe.whitelist()
-def add_item_review(hub_item_code, review):
+def add_item_review(hub_item_name, review):
 	'''Adds a review record for Hub Item and limits to 1 per user'''
 	new_review = json.loads(review)
 
-	item_doc = frappe.get_doc('Hub Item', hub_item_code)
+	item_doc = frappe.get_doc('Hub Item', hub_item_name)
 	existing_reviews = item_doc.get('reviews')
 
 	# dont allow more than 1 review
@@ -321,7 +321,7 @@ def get_buying_items_for_messages(hub_seller=None):
 	item_names = [item.reference_hub_item for item in items]
 
 	items = get_items(filters={
-		'hub_item_code': ['in', item_names]
+		'name': ['in', item_names]
 	})
 
 	for item in items:
@@ -348,7 +348,7 @@ def get_selling_items_for_messages(hub_seller=None):
 	item_names = [item.reference_hub_item for item in items]
 
 	items = get_items(filters={
-		'hub_item_code': ['in', item_names]
+		'name': ['in', item_names]
 	})
 
 	for item in items:
@@ -381,6 +381,6 @@ def validate_session_user(user):
 		frappe.throw(_('Not Permitted'), frappe.PermissionError)
 
 def get_recent_message(item):
-	message = get_messages(item.hub_seller, item.hub_item_code, limit=1, order_by='creation desc')
+	message = get_messages(item.hub_seller, item.hub_item_name, limit=1, order_by='creation desc')
 	message_object = message[0] if message else {}
 	return message_object

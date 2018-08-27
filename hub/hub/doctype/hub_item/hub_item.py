@@ -14,9 +14,10 @@ class HubItem(WebsiteGenerator):
 	)
 
 	def autoname(self):
+		name_length = 16
+		hash_length = 12
 		super(HubItem, self).autoname()
-		self.hub_item_code = self.name
-		self.name = autoname_increment_by_field(self.doctype, 'hub_item_code', self.name)
+		self.name = self.name[:name_length] + '-' + frappe.generate_hash(self.doctype, hash_length)
 
 	def validate(self):
 		# site_name = frappe.db.get_value('Hub Company', self.company_name, 'site_name')
@@ -31,7 +32,7 @@ class HubItem(WebsiteGenerator):
 
 	def update_keywords_field(self):
 		# update fulltext field
-		keyword_fields = ["item_name", "item_code", "hub_item_code", "hub_category",
+		keyword_fields = ["name", "item_name", "item_code", "hub_category",
 			"hub_seller.company", "hub_seller.country", "hub_seller.company_description"]
 
 		keywords = []

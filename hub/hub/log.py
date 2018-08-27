@@ -20,17 +20,17 @@ def update_hub_seller_activity(hub_seller, activity_details):
 	return doc
 
 
-def update_hub_item_view_log(hub_item_code, hub_seller):
+def update_hub_item_view_log(hub_item_name, hub_seller):
 	log_type = 'ITEM-VIEW'
 
 	hub_item_seller = frappe.db.get_value(
-		'Hub Item', hub_item_code, 'hub_seller')
+		'Hub Item', hub_item_name, 'hub_seller')
 
 	is_own_item_of_seller = hub_seller == hub_item_seller
 
 	existing_favourite_logs = frappe.db.get_all('Hub Log', filters={
 		'type': log_type,
-		'primary_document': hub_item_code,
+		'primary_document': hub_item_name,
 		'secondary_document': hub_seller
 	})
 
@@ -41,28 +41,28 @@ def update_hub_item_view_log(hub_item_code, hub_seller):
 			'type': log_type,
 
 			'primary_doctype': 'Hub Item',
-			'primary_document': hub_item_code,
+			'primary_document': hub_item_name,
 			'secondary_doctype': 'Hub Seller',
 			'secondary_document': hub_seller
 		}).insert(ignore_permissions=True)
 
 
-def get_item_view_count(hub_item_code):
+def get_item_view_count(hub_item_name):
 	return len(frappe.get_all('Hub Log',
 		filters={
 			'type': 'ITEM-VIEW',
-			'primary_document': hub_item_code
+			'primary_document': hub_item_name
 		}
 	))
 
 
 # Cardinal sin: should use the update_hub_item_favourite_log() method below instead,
 # But if we can do an ORDER BY before a GROUP BY
-def mutate_hub_item_favourite_log(hub_item_code, hub_seller, favourited=1):
+def mutate_hub_item_favourite_log(hub_item_name, hub_seller, favourited=1):
 	log_type = 'ITEM-FAV' if favourited else 'ITEM-UNFAV'
 
 	hub_item_seller = frappe.db.get_value(
-		'Hub Item', hub_item_code, 'hub_seller')
+		'Hub Item', hub_item_name, 'hub_seller')
 
 	is_own_item_of_seller = hub_seller == hub_item_seller
 
@@ -71,7 +71,7 @@ def mutate_hub_item_favourite_log(hub_item_code, hub_seller, favourited=1):
 	existing_favourite_logs = frappe.db.get_all('Hub Log', filters={
 		'type': ['in', favourite_log_types],
 		'primary_doctype': 'Hub Item',
-		'primary_document': hub_item_code,
+		'primary_document': hub_item_name,
 		'secondary_doctype': 'Hub Seller',
 		'secondary_document': hub_seller
 	})
@@ -86,7 +86,7 @@ def mutate_hub_item_favourite_log(hub_item_code, hub_seller, favourited=1):
 				'doctype': 'Hub Log',
 				'type': log_type,
 				'primary_doctype': 'Hub Item',
-				'primary_document': hub_item_code,
+				'primary_document': hub_item_name,
 				'secondary_doctype': 'Hub Seller',
 				'secondary_document': hub_seller
 			}).insert(ignore_permissions=True)
@@ -94,11 +94,11 @@ def mutate_hub_item_favourite_log(hub_item_code, hub_seller, favourited=1):
 	return latest_log
 
 
-def get_favourite_item_logs_seller(hub_item_code, hub_seller):
+def get_favourite_item_logs_seller(hub_item_name, hub_seller):
 	return frappe.get_all('Hub Log', fields=['primary_document', 'type'], filters={
 			'type': 'ITEM-FAV',
 			'primary_doctype': 'Hub Item',
-			'primary_document': hub_item_code,
+			'primary_document': hub_item_name,
 			'secondary_doctype': 'Hub Seller',
 			'secondary_document': hub_seller
 		},
@@ -116,18 +116,18 @@ def get_favourite_logs_seller(hub_seller):
 	)
 
 
-def update_hub_item_favourite_log(hub_item_code, hub_seller, favourited=1):
+def update_hub_item_favourite_log(hub_item_name, hub_seller, favourited=1):
 	log_type = 'ITEM-FAV' if favourited else 'ITEM-UNFAV'
 
 	hub_item_seller = frappe.db.get_value(
-		'Hub Item', hub_item_code, 'hub_seller')
+		'Hub Item', hub_item_name, 'hub_seller')
 
 	is_own_item_of_seller = hub_seller == hub_item_seller
 
 	existing_favourite_logs = frappe.db.get_all('Hub Log', filters={
 		'type': log_type,
 		'primary_doctype': 'Hub Item',
-		'primary_document': hub_item_code,
+		'primary_document': hub_item_name,
 		'secondary_doctype': 'Hub Seller',
 		'secondary_document': hub_seller
 	})
@@ -141,7 +141,7 @@ def update_hub_item_favourite_log(hub_item_code, hub_seller, favourited=1):
 			'type': log_type,
 
 			'primary_doctype': 'Hub Item',
-			'primary_document': hub_item_code,
+			'primary_document': hub_item_name,
 			'secondary_doctype': 'Hub Seller',
 			'secondary_document': hub_seller
 		}).insert(ignore_permissions=True)
