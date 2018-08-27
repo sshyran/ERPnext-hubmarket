@@ -26,7 +26,7 @@ def get_random_items_from_each_hub_seller():
 	res = frappe.db.sql('''
 		SELECT * FROM (
 			SELECT
-				h.name AS hub_seller_name, h.name, i.name AS hub_item_code, i.item_name
+				h.name AS hub_seller_name, h.name, i.name AS hub_item_name, i.item_name
 			FROM `tabHub Seller` h
 			INNER JOIN `tabHub Item` i ON h.name = i.hub_seller
 			ORDER BY RAND()
@@ -34,10 +34,10 @@ def get_random_items_from_each_hub_seller():
 		GROUP BY hub_seller_name;
 	''', as_dict=True)
 
-	hub_item_codes = [r.hub_item_code for r in res]
+	hub_item_names = [r.hub_item_name for r in res]
 
 	fields = get_item_fields()
-	return frappe.get_all('Hub Item', fields=fields, filters={ 'name': ['in', hub_item_codes] })
+	return frappe.get_all('Hub Item', fields=fields, filters={ 'name': ['in', hub_item_names] })
 
 
 def get_items_from_all_categories():
@@ -83,7 +83,7 @@ def get_items_with_images():
 @post_process_items
 def get_items_from_codes(item_codes):
 	return frappe.get_all('Hub Item', fields=get_item_fields(), filters={
-			'hub_item_code': ['in', item_codes],
+			'hub_item_name': ['in', item_codes],
 		},
 		order_by = 'modified desc'
 	)
@@ -102,7 +102,7 @@ def post_process_item_details(items):
 
 
 def get_item_fields():
-	return ['name', 'hub_item_code', 'item_name', 'image', 'creation', 'hub_seller']
+	return ['name', 'item_name', 'image', 'creation', 'hub_seller']
 
 
 def get_item_details_and_company_name(items):
