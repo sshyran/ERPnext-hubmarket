@@ -352,12 +352,17 @@ def get_selling_items_for_messages(hub_seller=None):
 	})
 
 	for item in items:
-		item['received_messages'] = frappe.get_all('Hub Seller Message',
+		item.received_messages = frappe.get_all('Hub Seller Message',
 			fields=['sender', 'receiver', 'content', 'creation'],
 			filters={
 				'receiver': hub_seller,
 				'reference_hub_item': item.name
 			}, distinct=True, order_by='creation DESC')
+
+		for message in item.received_messages:
+			buyer_email = message.sender if message.sender != hub_seller else message.receiver
+			message.buyer_email = buyer_email
+			message.buyer = frappe.db.get_value('Hub Seller', buyer_email, 'company')
 
 	return items
 
@@ -377,6 +382,8 @@ def send_message(from_seller, to_seller, message, hub_item):
 	return msg
 
 def validate_session_user(user):
+	if frappe.session.user == 'Administrator':
+		return True
 	if frappe.session.user != user:
 		frappe.throw(_('Not Permitted'), frappe.PermissionError)
 
