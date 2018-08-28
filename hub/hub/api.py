@@ -21,12 +21,12 @@ from .curation import (
 )
 
 from .log import (
+	add_log,
+	add_saved_item,
+	remove_saved_item,
+
+
 	update_hub_seller_activity,
-	update_hub_item_view_log,
-	get_item_view_count,
-	mutate_hub_item_favourite_log,
-	get_favourite_logs_seller,
-	get_favourite_item_logs_seller
 )
 
 
@@ -146,7 +146,8 @@ def get_items(keyword='', hub_seller=None, filters={}):
 
 
 @frappe.whitelist()
-def add_hub_seller_activity(hub_seller, activity_details):
+def add_hub_seller_activity(activity_details):
+	hub_seller = frappe.session.user
 	return update_hub_seller_activity(hub_seller, activity_details)
 
 
@@ -189,15 +190,7 @@ def get_item_details(hub_item_name):
 	# frappe.session.user is the hub_seller if not Guest
 	hub_seller = frappe.session.user if frappe.session.user != 'Guest' else None
 
-	if hub_seller:
-		logs = get_favourite_item_logs_seller(hub_item_name, hub_seller)
-		if len(logs):
-			item['favourited'] = 1
-
 	item['view_count'] = get_item_view_count(hub_item_name)
-
-	if hub_seller:
-		update_hub_item_view_log(hub_item_name, hub_seller)
 
 	return item
 
@@ -213,17 +206,6 @@ def get_item_reviews(hub_item_name):
 
 	return reviews or []
 
-
-@frappe.whitelist()
-def add_item_to_seller_favourites(hub_item_name, hub_seller):
-	# Cardinal sin
-	return mutate_hub_item_favourite_log(hub_item_name, hub_seller, 1)
-
-
-@frappe.whitelist()
-def remove_item_from_seller_favourites(hub_item_name, hub_seller):
-	# Cardinal sin
-	return mutate_hub_item_favourite_log(hub_item_name, hub_seller, 0)
 
 
 @frappe.whitelist()
@@ -255,12 +237,55 @@ def get_categories(parent='All Categories'):
 
 	return categories
 
+# Hub Item View
 
 @frappe.whitelist()
-def get_favourite_items_of_seller(hub_seller):
-	item_logs = get_favourite_logs_seller(hub_seller)
-	favourite_item_codes = [d.primary_document for d in item_logs]
-	return get_items_from_codes(favourite_item_codes)
+def add_item_view(hub_item_name):
+	hub_seller = frappe.session.user
+	log = add_log('Hub Item View', hub_item_name, hub_seller)
+	return log
+
+
+def get_item_view_count(hub_item_name):
+	result = frappe.get_all('Hub Log',
+		fields=['count(name) as view_count'],
+		filters={
+			'type': 'Hub Item View',
+			'reference_hub_item': hub_item_name
+		}
+	)
+
+	return result[0].view_count
+
+
+# Saved Items
+
+@frappe.whitelist()
+def add_item_to_seller_saved_items(hub_item_name):
+	hub_seller = frappe.session.user
+	log = add_log('Hub Item Save', hub_item_name, hub_seller, 1)
+	add_saved_item(hub_item_name, hub_seller)
+	return log
+
+
+@frappe.whitelist()
+def remove_item_from_seller_saved_items(hub_item_name):
+	hub_seller = frappe.session.user
+	log = add_log('Hub Item Save', hub_item_name, hub_seller, 0)
+	remove_saved_item(hub_item_name, hub_seller)
+	return log
+
+
+@frappe.whitelist()
+def get_saved_items_of_seller():
+	hub_seller = frappe.session.user
+	saved_items = frappe.get_all('Hub Saved Item', fields=['hub_item'], filters = {
+		'hub_seller': hub_seller
+	})
+
+	saved_item_names = [d.hub_item for d in saved_items]
+
+	return get_items(filters={'name': ['in', saved_item_names]})
 
 
 @frappe.whitelist()

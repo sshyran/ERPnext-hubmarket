@@ -6,6 +6,37 @@ import frappe
 import json
 
 
+def add_log(log_type, hub_item_name=None, hub_seller=None, data=None):
+	return frappe.get_doc({
+		'doctype': 'Hub Log',
+		'type': log_type,
+		'reference_hub_item': hub_item_name,
+		'reference_hub_seller': hub_seller,
+		'data': json.dumps(data)
+	}).insert()
+
+
+def add_saved_item(hub_item_name, hub_seller):
+	try:
+		frappe.get_doc({
+			'doctype': 'Hub Saved Item',
+			'hub_seller': hub_seller,
+			'hub_item': hub_item_name
+		}).insert()
+	except frappe.DuplicateEntryError:
+		pass
+
+
+def remove_saved_item(hub_item_name, hub_seller):
+	name = frappe.db.get_value('Hub Saved Item', {
+		'hub_item': hub_item_name,
+		'hub_seller': hub_seller
+	})
+
+	if name:
+		frappe.delete_doc('Hub Saved Item', name)
+
+
 def update_hub_seller_activity(hub_seller, activity_details):
 	activity_details = json.loads(activity_details)
 	doc = frappe.get_doc({
@@ -54,110 +85,3 @@ def get_item_view_count(hub_item_name):
 			'primary_document': hub_item_name
 		}
 	))
-
-
-# Cardinal sin: should use the update_hub_item_favourite_log() method below instead,
-# But if we can do an ORDER BY before a GROUP BY
-def mutate_hub_item_favourite_log(hub_item_name, hub_seller, favourited=1):
-	log_type = 'ITEM-FAV' if favourited else 'ITEM-UNFAV'
-
-	hub_item_seller = frappe.db.get_value(
-		'Hub Item', hub_item_name, 'hub_seller')
-
-	is_own_item_of_seller = hub_seller == hub_item_seller
-
-	favourite_log_types = ['ITEM-FAV', 'ITEM-UNFAV']
-
-	existing_favourite_logs = frappe.db.get_all('Hub Log', filters={
-		'type': ['in', favourite_log_types],
-		'primary_doctype': 'Hub Item',
-		'primary_document': hub_item_name,
-		'secondary_doctype': 'Hub Seller',
-		'secondary_document': hub_seller
-	})
-
-	latest_log = existing_favourite_logs[0] if len(existing_favourite_logs) else ''
-
-	if not is_own_item_of_seller:
-		if latest_log:
-			frappe.db.set_value('Hub Log', latest_log.get('name'), 'type', log_type)
-		else:
-			latest_log = frappe.get_doc({
-				'doctype': 'Hub Log',
-				'type': log_type,
-				'primary_doctype': 'Hub Item',
-				'primary_document': hub_item_name,
-				'secondary_doctype': 'Hub Seller',
-				'secondary_document': hub_seller
-			}).insert(ignore_permissions=True)
-
-	return latest_log
-
-
-def get_favourite_item_logs_seller(hub_item_name, hub_seller):
-	return frappe.get_all('Hub Log', fields=['primary_document', 'type'], filters={
-			'type': 'ITEM-FAV',
-			'primary_doctype': 'Hub Item',
-			'primary_document': hub_item_name,
-			'secondary_doctype': 'Hub Seller',
-			'secondary_document': hub_seller
-		},
-		order_by = 'modified desc'
-	)
-
-
-def get_favourite_logs_seller(hub_seller):
-	return frappe.get_all('Hub Log', fields=['primary_document', 'type'], filters={
-			'type': 'ITEM-FAV',
-			'secondary_doctype': 'Hub Seller',
-			'secondary_document': hub_seller
-		},
-		order_by = 'modified desc'
-	)
-
-
-def update_hub_item_favourite_log(hub_item_name, hub_seller, favourited=1):
-	log_type = 'ITEM-FAV' if favourited else 'ITEM-UNFAV'
-
-	hub_item_seller = frappe.db.get_value(
-		'Hub Item', hub_item_name, 'hub_seller')
-
-	is_own_item_of_seller = hub_seller == hub_item_seller
-
-	existing_favourite_logs = frappe.db.get_all('Hub Log', filters={
-		'type': log_type,
-		'primary_doctype': 'Hub Item',
-		'primary_document': hub_item_name,
-		'secondary_doctype': 'Hub Seller',
-		'secondary_document': hub_seller
-	})
-
-	latest_log = existing_favourite_logs[0] if len(existing_favourite_logs) else ''
-
-	if not is_own_item_of_seller and not latest_log:
-		frappe.get_doc({
-			'doctype': 'Hub Log',
-
-			'type': log_type,
-
-			'primary_doctype': 'Hub Item',
-			'primary_document': hub_item_name,
-			'secondary_doctype': 'Hub Seller',
-			'secondary_document': hub_seller
-		}).insert(ignore_permissions=True)
-
-
-def get_all_favourite_item_logs_seller(hub_seller):
-	favourite_log_types = ['ITEM-FAV', 'ITEM-UNFAV']
-
-	return frappe.get_all('Hub Log', fields=['primary_document', 'type'], filters={
-			'type': ['in', favourite_log_types],
-			'secondary_doctype': 'Hub Seller',
-			'secondary_document': hub_seller
-		},
-		order_by = 'modified desc',
-
-		# Group by Hub Item document
-		group_by = 'primary_document'
-	)
-
