@@ -8,6 +8,8 @@ from frappe.website.website_generator import WebsiteGenerator
 from hub.hub.utils import autoname_increment_by_field
 from frappe.utils.file_manager import save_file
 
+MAX_SELLER_ITEM_COUNT = 200
+
 class HubItem(WebsiteGenerator):
 	website = frappe._dict(
 		page_title_field = "item_name"
@@ -20,9 +22,10 @@ class HubItem(WebsiteGenerator):
 		self.name = self.name[:name_length] + '-' + frappe.generate_hash(self.doctype, hash_length)
 
 	def validate(self):
-		# site_name = frappe.db.get_value('Hub Company', self.company_name, 'site_name')
-		# if self.image and self.image.startswith('/') and site_name not in self.image:
-		# 	self.image = '//' + site_name + self.image
+		seller_item_count = frappe.db.count("Hub Item", {"hub_seller": self.hub_seller})
+
+		if seller_item_count >= MAX_SELLER_ITEM_COUNT:
+			frappe.throw('Max allowed items for seller {seller} exceeded.'.format(seller=self.hub_seller))
 
 		if not self.route:
 			self.route = 'items/' + self.name
