@@ -49,39 +49,3 @@ def update_hub_seller_activity(hub_seller, activity_details):
 		'reference_name': hub_seller
 	}).insert(ignore_permissions=True)
 	return doc
-
-
-def update_hub_item_view_log(hub_item_name, hub_seller):
-	log_type = 'ITEM-VIEW'
-
-	hub_item_seller = frappe.db.get_value(
-		'Hub Item', hub_item_name, 'hub_seller')
-
-	is_own_item_of_seller = hub_seller == hub_item_seller
-
-	existing_favourite_logs = frappe.db.get_all('Hub Log', filters={
-		'type': log_type,
-		'primary_document': hub_item_name,
-		'secondary_document': hub_seller
-	})
-
-	if not is_own_item_of_seller and not len(existing_favourite_logs):
-		frappe.get_doc({
-			'doctype': 'Hub Log',
-
-			'type': log_type,
-
-			'primary_doctype': 'Hub Item',
-			'primary_document': hub_item_name,
-			'secondary_doctype': 'Hub Seller',
-			'secondary_document': hub_seller
-		}).insert(ignore_permissions=True)
-
-
-def get_item_view_count(hub_item_name):
-	return len(frappe.get_all('Hub Log',
-		filters={
-			'type': 'ITEM-VIEW',
-			'primary_document': hub_item_name
-		}
-	))
