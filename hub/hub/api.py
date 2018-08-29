@@ -42,6 +42,7 @@ def register(profile):
 		password = random_string(16)
 		email = profile.company_email
 		company_name = profile.company
+		site_name = profile.site_name
 
 		if frappe.db.exists('User', email):
 			user = frappe.get_doc('User', email)
@@ -65,6 +66,7 @@ def register(profile):
 				'enabled': 1,
 				'doctype': 'Hub Seller',
 				'user': email,
+				'site_name': site_name,
 				'hub_seller_activity': [{'type': 'Created'}]
 			})
 			seller = frappe.get_doc(seller_data)
@@ -78,7 +80,7 @@ def register(profile):
 	except Exception as e:
 		print("Hub Server Exception")
 		print(frappe.get_traceback())
-
+		frappe.log_error(title="Hub Server Exception")
 		frappe.throw(frappe.get_traceback())
 
 
