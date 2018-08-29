@@ -24,10 +24,13 @@ from .log import (
 	add_log,
 	add_saved_item,
 	remove_saved_item,
-
-
-	update_hub_seller_activity,
+	get_seller_items_synced_count,
+	add_seller_publish_stats,
+	add_hub_seller_activity,
 )
+
+
+current_hub_seller = frappe.session.user
 
 
 @frappe.whitelist(allow_guest=True)
@@ -78,10 +81,11 @@ def register(profile):
 
 		frappe.throw(frappe.get_traceback())
 
-		# return {
-		# 	'error': "Hub Server Exception",
-		# 	'traceback': frappe.get_traceback()
-		# }
+
+@frappe.whitelist()
+def unregister():
+	frappe.db.set_value('Hub Seller', current_hub_seller, 'enabled', 0)
+	return current_hub_seller
 
 
 @frappe.whitelist()
@@ -146,9 +150,53 @@ def get_items(keyword='', hub_seller=None, filters={}):
 
 
 @frappe.whitelist()
-def add_hub_seller_activity(activity_details):
-	hub_seller = frappe.session.user
-	return update_hub_seller_activity(hub_seller, activity_details)
+def pre_items_publish(intended_item_publish_count):
+	log = add_log(
+		log_type = 'Hub Seller Publish',
+		hub_seller = current_hub_seller,
+		data = {
+			'status': 'Pending',
+			'number_of_items_to_sync': intended_item_publish_count
+		}
+	)
+
+	add_hub_seller_activity(
+		current_hub_seller,
+		'Hub Seller Publish',
+		{
+			'number_of_items_to_sync': intended_item_publish_count
+		},
+		'Pending'
+	)
+
+	return log
+
+
+@frappe.whitelist()
+def post_items_publish():
+	items_synced_count = get_seller_items_synced_count(current_hub_seller)
+
+	log = add_log(
+		log_type = 'Hub Seller Publish',
+		hub_seller = current_hub_seller,
+		data = {
+			'status': 'Completed',
+			'items_synced_count': items_synced_count
+		}
+	)
+
+	add_hub_seller_activity(
+		current_hub_seller,
+		'Hub Seller Publish',
+		{
+			'items_synced_count': items_synced_count
+		},
+		'Completed'
+	)
+
+	add_seller_publish_stats(current_hub_seller)
+
+	return log
 
 
 @frappe.whitelist(allow_guest=True)
@@ -231,9 +279,9 @@ def add_item_review(hub_item_name, review):
 def get_categories(parent='All Categories'):
 	# get categories info with parent category and stuff
 	categories = frappe.get_all('Hub Category',
-								filters={'parent_hub_category': parent},
-								fields=['name'],
-								order_by='name asc')
+		filters={'parent_hub_category': parent},
+		fields=['name'],
+		order_by='name asc')
 
 	return categories
 
