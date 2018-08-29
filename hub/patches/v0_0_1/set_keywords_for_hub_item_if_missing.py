@@ -1,6 +1,7 @@
 import frappe
 
 def execute():
+	frappe.reload_doc('hub', 'doctype', 'Hub Item')
 	hub_items = frappe.get_all('Hub Item', filters={
 		'keywords': ''
 	})
