@@ -264,6 +264,19 @@ def add_item_view(hub_item_name):
 	log = add_log('Hub Item View', hub_item_name, hub_seller)
 	return log
 
+# Report Item
+
+@frappe.whitelist()
+def add_reported_item(hub_item_name, message=None):
+	hub_seller = frappe.session.user
+
+	if message:
+		data = {
+			'message': message
+		}
+
+	log = add_log('Hub Reported Item', hub_item_name, hub_seller, data)
+	return log
 
 # Saved Items
 
