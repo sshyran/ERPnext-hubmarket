@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import frappe
 
 class Curation(object):
-	fields = ['name', 'item_name', 'image', 'creation', 'hub_seller']
+	fields = ['name', 'item_name', 'image', 'description', 'creation', 'hub_seller']
 
 
 	def __init__(self, hub_seller=None, country=None):
@@ -114,8 +114,10 @@ class Curation(object):
 			item.no_of_ratings = res['no_of_ratings']
 
 			if item.hub_seller:
-				company, country, city = frappe.db.get_value('Hub Seller', item.hub_seller, ['company', 'country', 'city'])
+				company, company_description, country, city = frappe.db.get_value('Hub Seller', item.hub_seller,
+					['company', 'company_description', 'country', 'city'])
 
+				item.seller_description = company_description
 				item.company = company
 				item.country = country
 				item.city = city
