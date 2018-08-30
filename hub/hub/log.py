@@ -13,7 +13,7 @@ def add_log(log_type, hub_item_name=None, hub_seller=None, data=None):
 		'reference_hub_item': hub_item_name,
 		'reference_hub_seller': hub_seller,
 		'data': json.dumps(data)
-	}).insert()
+	}).insert(ignore_permissions=True)
 
 
 def add_saved_item(hub_item_name, hub_seller):

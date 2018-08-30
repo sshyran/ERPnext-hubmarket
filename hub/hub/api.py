@@ -8,17 +8,7 @@ from frappe import _
 from frappe.utils import random_string
 from six import string_types
 
-from .curation import (
-	get_item_fields,
-	post_process_item_details,
-	post_process_items,
-	get_items_by_country,
-	get_items_with_images,
-	get_random_items_from_each_hub_seller,
-	get_items_from_all_categories,
-	get_items_from_hub_seller,
-	get_items_from_codes
-)
+from .curation import Curation
 
 from .log import (
 	add_log,
@@ -111,21 +101,8 @@ def get_data_for_homepage(country=None):
 	'''
 	Get curated item list for the homepage.
 	'''
-	fields = get_item_fields()
-	items = []
-
-	items_by_country = []
-	if country:
-		items_by_country += get_items_by_country(country)
-
-	items_with_images = get_items_with_images()
-
-	return dict(
-		items_by_country=items_by_country,
-		items_with_images=items_with_images or [],
-		random_items=get_random_items_from_each_hub_seller() or [],
-		category_items=get_items_from_all_categories() or []
-	)
+	c = Curation(current_hub_seller, country)
+	return c.get_data_for_homepage()
 
 
 @frappe.whitelist(allow_guest=True)
@@ -133,7 +110,7 @@ def get_items(keyword='', hub_seller=None, filters={}):
 	'''
 	Get items by matching it with the keywords field
 	'''
-	fields = get_item_fields()
+	c = Curation(current_hub_seller)
 
 	if isinstance(filters, string_types):
 		filters = json.loads(filters)
@@ -144,11 +121,7 @@ def get_items(keyword='', hub_seller=None, filters={}):
 	if hub_seller:
 		filters["hub_seller"] = hub_seller
 
-	items = frappe.get_all('Hub Item', fields=fields, filters=filters)
-
-	items = post_process_item_details(items)
-
-	return items
+	return c.get_items(filters=filters)
 
 
 @frappe.whitelist()
@@ -209,9 +182,13 @@ def get_hub_seller_page_info(hub_seller='', company=''):
 	else:
 		frappe.throw('No Seller or Company Name received.')
 
+	items_by_seller = Curation().get_items(filters={
+		'hub_seller': hub_seller
+	})
+
 	return {
 		'profile': get_hub_seller_profile(hub_seller),
-		'items': get_items_from_hub_seller(hub_seller)
+		'items': items_by_seller
 	}
 
 
@@ -228,21 +205,9 @@ def get_hub_seller_profile(hub_seller=''):
 
 @frappe.whitelist(allow_guest=True)
 def get_item_details(hub_item_name):
-	fields = get_item_fields()
-	items = frappe.get_all('Hub Item', fields=fields, filters={'name': hub_item_name})
-
-	if not items:
-		return None
-
-	items = post_process_item_details(items)
-	item = items[0]
-
-	# frappe.session.user is the hub_seller if not Guest
-	hub_seller = frappe.session.user if frappe.session.user != 'Guest' else None
-
-	item['view_count'] = get_item_view_count(hub_item_name)
-
-	return item
+	c = Curation()
+	items = c.get_items(filters={'name': hub_item_name})
+	return items[0] if len(items) == 1 else None
 
 
 @frappe.whitelist(allow_guest=True)
@@ -289,23 +254,15 @@ def get_categories(parent='All Categories'):
 
 # Hub Item View
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def add_item_view(hub_item_name):
 	hub_seller = frappe.session.user
+
+	if hub_seller == 'Guest':
+		hub_seller = None
+
 	log = add_log('Hub Item View', hub_item_name, hub_seller)
 	return log
-
-
-def get_item_view_count(hub_item_name):
-	result = frappe.get_all('Hub Log',
-		fields=['count(name) as view_count'],
-		filters={
-			'type': 'Hub Item View',
-			'reference_hub_item': hub_item_name
-		}
-	)
-
-	return result[0].view_count
 
 
 # Saved Items
