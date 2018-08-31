@@ -45,7 +45,7 @@ class Curation(object):
 		items_from_categories = {}
 		for category in [d.name for d in frappe.get_all('Hub Category', fields='name')]:
 			if frappe.db.count('Hub Item', filters={ 'hub_category': category }) > 20:
-				items_from_categories[category] = self.get_items_from_category(category)
+				items_from_categories[category] = self.get_items_by_category(category)
 		return items_from_categories
 
 
@@ -69,6 +69,7 @@ class Curation(object):
 	def get_items_by_category(self, category):
 		return self.get_items(
 			filters={ 'hub_category': category },
+			limit = 4
 		)
 
 
