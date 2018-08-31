@@ -59,6 +59,10 @@ def register(profile):
 				'site_name': site_name,
 				'hub_seller_activity': [{'type': 'Created'}]
 			})
+
+			# TODO: Create Users in Hub Seller
+			profile.pop('users', None)
+
 			seller = frappe.get_doc(seller_data)
 			seller.insert(ignore_permissions=True)
 
