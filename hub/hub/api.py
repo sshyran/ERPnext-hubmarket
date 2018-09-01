@@ -24,7 +24,7 @@ current_hub_seller = frappe.session.user
 
 
 @frappe.whitelist(allow_guest=True)
-def register(company_details):
+def add_hub_seller(company_details):
 	"""Register on the hub."""
 	try:
 		company_details = frappe._dict(json.loads(company_details))
