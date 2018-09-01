@@ -24,16 +24,14 @@ current_hub_seller = frappe.session.user
 
 
 @frappe.whitelist(allow_guest=True)
-def register(profile):
+def register(profile, email, username, first_name, company):
 	"""Register on the hub."""
 	try:
 		profile = frappe._dict(json.loads(profile))
-
-		password = random_string(16)
-		email = profile.company_email
 		company_name = profile.company
 		site_name = profile.site_name
 
+		password = random_string(16)
 		if frappe.db.exists('User', email):
 			user = frappe.get_doc('User', email)
 			user.enabled = 1
@@ -52,19 +50,19 @@ def register(profile):
 			user.flags.delay_emails = True
 			user.insert(ignore_permissions=True)
 
-			seller_data = profile.update({
-				'enabled': 1,
-				'doctype': 'Hub Seller',
-				'user': email,
-				'site_name': site_name,
-				'hub_seller_activity': [{'type': 'Created'}]
-			})
+			# seller_data = profile.update({
+			# 	'enabled': 1,
+			# 	'doctype': 'Hub Seller',
+			# 	'user': email,
+			# 	'site_name': site_name,
+			# 	'hub_seller_activity': [{'type': 'Created'}]
+			# })
 
-			# TODO: Create Users in Hub Seller
-			profile.pop('users', None)
+			# # TODO: Create Users in Hub Seller
+			# profile.pop('users', None)
 
-			seller = frappe.get_doc(seller_data)
-			seller.insert(ignore_permissions=True)
+			# seller = frappe.get_doc(seller_data)
+			# seller.insert(ignore_permissions=True)
 
 		return {
 			'email': email,
@@ -76,6 +74,11 @@ def register(profile):
 		print(frappe.get_traceback())
 		frappe.log_error(title="Hub Server Exception")
 		frappe.throw(frappe.get_traceback())
+
+
+@frappe.whitelist(allow_guest=True)
+def register_user(username, email, company):
+	pass
 
 
 @frappe.whitelist()
