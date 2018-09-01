@@ -24,49 +24,23 @@ current_hub_seller = frappe.session.user
 
 
 @frappe.whitelist(allow_guest=True)
-def register(profile, email, username, first_name, company):
+def register(company_details):
 	"""Register on the hub."""
 	try:
-		profile = frappe._dict(json.loads(profile))
-		company_name = profile.company
-		site_name = profile.site_name
+		company_details = frappe._dict(json.loads(company_details))
 
-		password = random_string(16)
-		if frappe.db.exists('User', email):
-			user = frappe.get_doc('User', email)
-			user.enabled = 1
-			user.new_password = password
-			user.save(ignore_permissions=True)
-		else:
-			# register
-			user = frappe.get_doc({
-				'doctype': 'User',
-				'email': email,
-				'first_name': company_name,
-				'new_password': password
-			})
-
-			user.append_roles("System Manager")
-			user.flags.delay_emails = True
-			user.insert(ignore_permissions=True)
-
-			# seller_data = profile.update({
-			# 	'enabled': 1,
-			# 	'doctype': 'Hub Seller',
-			# 	'user': email,
-			# 	'site_name': site_name,
-			# 	'hub_seller_activity': [{'type': 'Created'}]
-			# })
-
-			# # TODO: Create Users in Hub Seller
-			# profile.pop('users', None)
-
-			# seller = frappe.get_doc(seller_data)
-			# seller.insert(ignore_permissions=True)
+		hub_seller = frappe.get_doc({
+			'doctype': 'Hub Seller',
+			'company': company_details.company,
+			'country': company_details.country,
+			'city': company_details.city,
+			'currency': company_details.currency,
+			'site_name': company_details.site_name,
+			'company_description': company_details.company_description
+		}).insert(ignore_permissions=True)
 
 		return {
-			'email': email,
-			'password': password
+			'hub_seller_name': hub_seller.name
 		}
 
 	except Exception as e:
@@ -75,10 +49,23 @@ def register(profile, email, username, first_name, company):
 		frappe.log_error(title="Hub Server Exception")
 		frappe.throw(frappe.get_traceback())
 
-
 @frappe.whitelist(allow_guest=True)
-def register_user(username, email, company):
-	pass
+def add_hub_user(user_email, hub_seller, first_name, last_name=None):
+	password = random_string(16)
+	hub_user = frappe.get_doc({
+		'doctype': 'Hub User',
+		'hub_seller': hub_seller,
+		'user_email': user_email,
+		'first_name': first_name,
+		'last_name': last_name,
+		'password': password
+	}).insert(ignore_permissions=True)
+
+	return {
+		'user_email': user_email,
+		'hub_user_name': hub_user.name,
+		'password': password
+	}
 
 
 @frappe.whitelist()
