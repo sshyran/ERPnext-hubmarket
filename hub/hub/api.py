@@ -51,12 +51,14 @@ def add_hub_seller(company_details):
 
 @frappe.whitelist(allow_guest=True)
 def add_hub_user(user_email, hub_seller, first_name, last_name=None):
+	password = random_string(16)
 	hub_user = frappe.get_doc({
 		'doctype': 'Hub User',
 		'hub_seller': hub_seller,
 		'user_email': user_email,
 		'first_name': first_name,
-		'last_name': last_name
+		'last_name': last_name,
+		'password': password
 	}).insert(ignore_permissions=True)
 
 	return {
