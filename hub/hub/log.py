@@ -60,7 +60,8 @@ def get_total_items_of_seller(hub_seller):
 	)[0].item_count
 
 
-def add_seller_publish_stats(hub_seller, items_synced_count=None):
+def add_seller_publish_stats(hub_user, items_synced_count=None):
+	hub_seller = frappe.db.get_value('Hub User', hub_user, 'hub_seller')
 	if not items_synced_count:
 		items_synced_count = get_seller_items_synced_count(hub_seller)
 
@@ -75,13 +76,14 @@ def add_seller_publish_stats(hub_seller, items_synced_count=None):
 
 
 def add_hub_seller_activity(hub_seller, subject=None, content=None, status=None):
-	doc = frappe.get_doc({
-		'doctype': 'Activity Log',
-		'user': hub_seller,
-		'status': status,
-		'subject': subject,
-		'content': json.dumps(content),
-		'reference_doctype': 'Hub Seller',
-		'reference_name': hub_seller
-	}).insert(ignore_permissions=True)
-	return doc
+	pass
+# 	doc = frappe.get_doc({
+# 		'doctype': 'Activity Log',
+# 		'user': hub_seller,
+# 		'status': status,
+# 		'subject': subject,
+# 		'content': json.dumps(content),
+# 		'reference_doctype': 'Hub Seller',
+# 		'reference_name': hub_seller
+# 	}).insert(ignore_permissions=True)
+# 	return doc

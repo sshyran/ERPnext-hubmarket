@@ -153,21 +153,21 @@ def get_items(keyword='', hub_seller=None, filters={}):
 def pre_items_publish(intended_item_publish_count):
 	log = add_log(
 		log_type = 'Hub Seller Publish',
-		hub_seller = current_hub_user,
+		hub_user = current_hub_user,
 		data = {
 			'status': 'Pending',
 			'number_of_items_to_sync': intended_item_publish_count
 		}
 	)
 
-	add_hub_seller_activity(
-		current_hub_user,
-		'Hub Seller Publish',
-		{
-			'number_of_items_to_sync': intended_item_publish_count
-		},
-		'Pending'
-	)
+	# add_hub_seller_activity(
+	# 	current_hub_user,
+	# 	'Hub Seller Publish',
+	# 	{
+	# 		'number_of_items_to_sync': intended_item_publish_count
+	# 	},
+	# 	'Pending'
+	# )
 
 	return log
 
@@ -178,21 +178,21 @@ def post_items_publish():
 
 	log = add_log(
 		log_type = 'Hub Seller Publish',
-		hub_seller = current_hub_user,
+		hub_user = current_hub_user,
 		data = {
 			'status': 'Completed',
 			'items_synced_count': items_synced_count
 		}
 	)
 
-	add_hub_seller_activity(
-		current_hub_user,
-		'Hub Seller Publish',
-		{
-			'items_synced_count': items_synced_count
-		},
-		'Completed'
-	)
+	# add_hub_seller_activity(
+	# 	current_hub_user,
+	# 	'Hub Seller Publish',
+	# 	{
+	# 		'items_synced_count': items_synced_count
+	# 	},
+	# 	'Completed'
+	# )
 
 	add_seller_publish_stats(current_hub_user)
 
