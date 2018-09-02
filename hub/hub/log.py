@@ -6,31 +6,31 @@ import frappe
 import json
 
 
-def add_log(log_type, hub_item_name=None, hub_seller=None, data=None):
+def add_log(log_type, hub_item_name=None, hub_user=None, data=None):
 	return frappe.get_doc({
 		'doctype': 'Hub Log',
 		'type': log_type,
 		'reference_hub_item': hub_item_name,
-		'reference_hub_seller': hub_seller,
+		'reference_hub_user': hub_user,
 		'data': json.dumps(data)
 	}).insert(ignore_permissions=True)
 
 
-def add_saved_item(hub_item_name, hub_seller):
+def add_saved_item(hub_item_name, hub_user):
 	try:
 		frappe.get_doc({
 			'doctype': 'Hub Saved Item',
-			'hub_seller': hub_seller,
+			'hub_user': hub_user,
 			'hub_item': hub_item_name
 		}).insert()
 	except frappe.DuplicateEntryError:
 		pass
 
 
-def remove_saved_item(hub_item_name, hub_seller):
+def remove_saved_item(hub_item_name, hub_user):
 	name = frappe.db.get_value('Hub Saved Item', {
 		'hub_item': hub_item_name,
-		'hub_seller': hub_seller
+		'hub_user': hub_user
 	})
 
 	if name:
