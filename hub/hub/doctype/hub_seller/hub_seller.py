@@ -8,7 +8,10 @@ from frappe.model.document import Document
 
 class HubSeller(Document):
 	def autoname(self):
-		name_length = 16
-		hash_length = 12
-		company_name = self.company.replace(' ', '-')
-		self.name = company_name[:name_length] + '-' + frappe.generate_hash(self.doctype, hash_length)
+		self.name = get_name(self.company)
+
+def get_name(company_name):
+	name_length = 16
+	hash_length = 12
+	company_name = company_name.replace(' ', '-')
+	return company_name[:name_length] + '-' + frappe.generate_hash('Hub Seller', hash_length)
