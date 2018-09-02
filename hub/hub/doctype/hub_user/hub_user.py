@@ -11,6 +11,8 @@ from frappe.utils.password import get_decrypted_password
 class HubUser(Document):
 	def validate(self):
 		if not self.user:
+			self.password = random_string(16)
+
 			user = frappe.get_doc({
 				'doctype': 'User',
 				'email': self.user_email,
