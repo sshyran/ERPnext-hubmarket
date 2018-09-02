@@ -9,18 +9,4 @@ from frappe.utils import random_string
 from frappe.utils.password import get_decrypted_password
 
 class HubUser(Document):
-	def validate(self):
-		if not self.user:
-			user = frappe.get_doc({
-				'doctype': 'User',
-				'email': self.user_email,
-				'first_name': self.first_name,
-				'last_name': self.last_name,
-				'new_password': self.password
-			})
-
-			user.append_roles('System Manager', 'Hub User', 'Hub Buyer')
-			user.flags.delay_emails = True
-			user.insert(ignore_permissions=True)
-
-			self.user = user.name
+	pass

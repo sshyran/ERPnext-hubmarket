@@ -4,11 +4,14 @@
 from __future__ import unicode_literals
 import frappe
 import json
+
 from frappe import _
 from frappe.utils import random_string
 from six import string_types
+from urlparse import urljoin
 
 from .curation import Curation
+from .utils import save_remote_file_locally
 
 from .log import (
 	add_log,
@@ -39,6 +42,21 @@ def add_hub_seller(company_details):
 			'company_description': company_details.company_description
 		}).insert(ignore_permissions=True)
 
+		# try and save company logo locally
+		company_logo = company_details.company_logo
+		if company_logo:
+			if company_logo.startswith('/files/'):
+				company_logo = urljoin(company_details.site_name, company_logo)
+
+			if company_logo.startswith('http'):
+				try:
+					logo = save_remote_file_locally(company_logo, 'Hub Seller', hub_seller.name)
+					hub_seller.logo = logo.file_url
+					hub_seller.save()
+				except Exception:
+					frappe.log_error(title='Hub Company Logo Exception')
+
+
 		return {
 			'hub_seller_name': hub_seller.name
 		}
@@ -52,13 +70,26 @@ def add_hub_seller(company_details):
 @frappe.whitelist(allow_guest=True)
 def add_hub_user(user_email, hub_seller, first_name, last_name=None):
 	password = random_string(16)
+
+	user = frappe.get_doc({
+		'doctype': 'User',
+		'email': user_email,
+		'first_name': first_name,
+		'last_name': last_name,
+		'new_password': password
+	})
+
+	user.append_roles('System Manager', 'Hub User', 'Hub Buyer')
+	user.flags.delay_emails = True
+	user.insert(ignore_permissions=True)
+
 	hub_user = frappe.get_doc({
 		'doctype': 'Hub User',
 		'hub_seller': hub_seller,
 		'user_email': user_email,
 		'first_name': first_name,
 		'last_name': last_name,
-		'password': password
+		'user': user.name
 	}).insert(ignore_permissions=True)
 
 	return {
