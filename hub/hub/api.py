@@ -362,12 +362,14 @@ def get_sellers_with_interactions(for_seller):
 
 
 @frappe.whitelist()
-def get_messages(against_item, order_by='creation asc', limit=None):
+def get_messages(against_item, against_seller=None, order_by='creation asc', limit=None):
 	'''Return all messages exchanged between seller of item and seller of hub_user'''
 
 	hub_user = frappe.session.user
 	hub_seller = get_hub_seller_of_user(hub_user)
-	against_seller = frappe.db.get_value('Hub Item', against_item, 'hub_seller')
+
+	if not against_seller:
+		against_seller = frappe.db.get_value('Hub Item', against_item, 'hub_seller')
 
 	hub_user_details = frappe.db.get_all('Hub User', fields=['name', 'first_name'],
 		filters={ 'hub_seller': ['in', [hub_seller, against_seller]] })
@@ -413,6 +415,7 @@ def get_buying_items_for_messages():
 def get_selling_items_for_messages():
 	hub_user = frappe.session.user
 	hub_seller = get_hub_seller_of_user(hub_user)
+	hub_users = get_hub_users_of_seller(hub_seller)
 
 	items = frappe.db.get_all('Hub Chat Message',
 		fields='reference_hub_item',
@@ -432,13 +435,13 @@ def get_selling_items_for_messages():
 		item.received_messages = frappe.get_all('Hub Chat Message',
 			fields=['sender', 'message', 'creation', 'hub_item_belongs_to_sender'],
 			filters={
+				'sender': ['not in', hub_users],
 				'reference_hub_item': item.name
 			}, distinct=True, order_by='creation DESC')
 
-		# for message in item.received_messages:
-		# 	buyer_email = message.sender if message.hub_item_belongs_to_sender else message.receiver
-		# 	message.buyer_email = buyer_email
-		# 	message.buyer = frappe.db.get_value('Hub Seller', buyer_email, ['name', 'company'])
+		for message in item.received_messages:
+			message.buyer = get_hub_seller_of_user(message.sender)
+			message.buyer_name = frappe.db.get_value('Hub Seller', message.buyer, 'company')
 
 	return items
 
@@ -473,3 +476,6 @@ def get_recent_message(item):
 
 def get_hub_seller_of_user(hub_user):
 	return frappe.db.get_value('Hub User', hub_user, 'hub_seller')
+
+def get_hub_users_of_seller(hub_seller):
+	return [user.name for user in frappe.db.get_all('Hub User', filters={ 'hub_seller': hub_seller })]
