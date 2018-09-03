@@ -23,9 +23,6 @@ from .log import (
 )
 
 
-current_hub_user = frappe.session.user
-
-
 @frappe.whitelist(allow_guest=True)
 def add_hub_seller(company_details):
 	"""Register on the hub."""
@@ -132,7 +129,7 @@ def get_data_for_homepage(country=None):
 	'''
 	Get curated item list for the homepage.
 	'''
-	c = Curation(current_hub_user, country)
+	c = Curation(country=country)
 	return c.get_data_for_homepage()
 
 
@@ -141,7 +138,7 @@ def get_items(keyword='', hub_seller=None, filters={}):
 	'''
 	Get items by matching it with the keywords field
 	'''
-	c = Curation(current_hub_user)
+	c = Curation()
 
 	if isinstance(filters, string_types):
 		filters = json.loads(filters)
@@ -157,9 +154,11 @@ def get_items(keyword='', hub_seller=None, filters={}):
 
 @frappe.whitelist()
 def pre_items_publish(intended_item_publish_count):
+	hub_user = frappe.session.user
+
 	log = add_log(
 		log_type = 'Hub Seller Publish',
-		hub_user = current_hub_user,
+		hub_user = hub_user,
 		data = {
 			'status': 'Pending',
 			'number_of_items_to_sync': intended_item_publish_count
@@ -180,11 +179,12 @@ def pre_items_publish(intended_item_publish_count):
 
 @frappe.whitelist()
 def post_items_publish():
-	items_synced_count = get_seller_items_synced_count(current_hub_user)
+	hub_user = frappe.session.user
+	items_synced_count = get_seller_items_synced_count(hub_user)
 
 	log = add_log(
 		log_type = 'Hub Seller Publish',
-		hub_user = current_hub_user,
+		hub_user = hub_user,
 		data = {
 			'status': 'Completed',
 			'items_synced_count': items_synced_count
@@ -200,7 +200,7 @@ def post_items_publish():
 	# 	'Completed'
 	# )
 
-	add_seller_publish_stats(current_hub_user)
+	add_seller_publish_stats(hub_user)
 
 	return log
 
@@ -288,11 +288,11 @@ def get_categories(parent='All Categories'):
 
 @frappe.whitelist(allow_guest=True)
 def add_item_view(hub_item_name):
-	current_hub_user = frappe.session.user
-	if current_hub_user == 'Guest':
-		current_hub_user = None
+	hub_user = frappe.session.user
+	if hub_user == 'Guest':
+		hub_user = None
 
-	log = add_log('Hub Item View', hub_item_name, current_hub_user)
+	log = add_log('Hub Item View', hub_item_name, hub_user)
 	return log
 
 # Report Item
@@ -329,8 +329,10 @@ def remove_item_from_user_saved_items(hub_item_name):
 
 @frappe.whitelist()
 def get_saved_items_of_user():
+	hub_user = frappe.session.user
+
 	saved_items = frappe.get_all('Hub Saved Item', fields=['hub_item'], filters = {
-		'hub_user': current_hub_user
+		'hub_user': hub_user
 	})
 
 	saved_item_names = [d.hub_item for d in saved_items]
