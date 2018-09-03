@@ -5,8 +5,7 @@
 from __future__ import unicode_literals
 import frappe, json, hub
 from frappe.website.website_generator import WebsiteGenerator
-from hub.hub.utils import autoname_increment_by_field
-from frappe.utils.file_manager import save_file
+from hub.hub.utils import save_remote_file_locally
 
 MAX_SELLER_ITEM_COUNT = 200
 
@@ -31,7 +30,7 @@ class HubItem(WebsiteGenerator):
 			self.route = 'items/' + self.name
 
 		self.update_keywords_field()
-		self.extract_image_from_base64()
+		self.save_image_locally()
 
 	def update_keywords_field(self):
 		# update fulltext field
@@ -54,16 +53,11 @@ class HubItem(WebsiteGenerator):
 
 		self.keywords = (" ").join(keywords)
 
-	def extract_image_from_base64(self):
-		if self.image and self.image.startswith('{'):
-			self.image = json.loads(self.image)
-
-			image_file_name = self.image['file_name']
-			base64 = self.image['base64']
-
-			if image_file_name and base64 and not is_valid_file_url(base64):
-				f = save_file(image_file_name, base64, self.doctype, self.name, decode=True)
-				self.image = f.file_url
+	def save_image_locally(self):
+		if self.image and self.image.startswith('http'):
+			image_file = save_remote_file_locally(self.image, self.doctype, self.name)
+			if image_file:
+				self.image = image_file.file_url
 
 	def get_context(self, context):
 		context.no_cache = True

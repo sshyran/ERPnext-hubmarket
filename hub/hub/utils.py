@@ -30,6 +30,9 @@ def save_remote_file_locally(file_url, doctype, name):
 	file_name = file_name.rsplit('?')[0]
 
 	response = requests.get(file_url)
-	f = save_file(file_name, response.content, doctype, name)
+
+	f = None
+	if response.ok:
+		f = save_file(file_name, response.content, doctype, name)
 
 	return f
