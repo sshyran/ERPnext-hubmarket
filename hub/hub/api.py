@@ -251,7 +251,8 @@ def get_item_reviews(hub_item_name):
 @frappe.whitelist()
 def add_item_review(hub_item_name, review):
 	'''Adds a review record for Hub Item and limits to 1 per user'''
-	new_review = json.loads(review)
+	new_review = frappe._dict(json.loads(review))
+	new_review.user = frappe.session.user
 
 	item_doc = frappe.get_doc('Hub Item', hub_item_name)
 	existing_reviews = item_doc.get('reviews')
@@ -259,7 +260,7 @@ def add_item_review(hub_item_name, review):
 	# dont allow more than 1 review
 	for review in existing_reviews:
 		if review.get('user') == new_review.get('user'):
-			return dict(error='Cannot add more than 1 review for the user {0}'.format(new_review.get('user')))
+			return dict(error=_('Cannot add more than 1 review for the user {0}').format(new_review.get('user')))
 
 	item_doc.append('reviews', new_review)
 	item_doc.save()
@@ -355,32 +356,39 @@ def get_sellers_with_interactions(for_seller):
 
 
 @frappe.whitelist()
-def get_messages(against_seller, against_item, order_by='creation asc', limit=None):
-	'''Return all messages sent between `for_seller` and `against_seller`'''
+def get_messages(against_item, order_by='creation asc', limit=None):
+	'''Return all messages exchanged between seller of item and seller of hub_user'''
 
-	for_seller = frappe.session.user
+	hub_user = frappe.session.user
+	hub_seller = get_hub_seller_of_user(hub_user)
+	against_seller = frappe.db.get_value('Hub Item', against_item, 'hub_seller')
 
-	messages = frappe.get_all('Hub Seller Message',
-		fields=['name', 'sender', 'receiver', 'content', 'creation'],
+	hub_user_details = frappe.db.get_all('Hub User', fields=['name', 'first_name'],
+		filters={ 'hub_seller': ['in', [hub_seller, against_seller]] })
+
+	hub_users = [hub_user.name for hub_user in hub_user_details]
+
+	messages = frappe.get_all('Hub Chat Message',
+		fields=['name', 'sender', 'message', 'creation'],
 		filters={
-			'sender': ['in', (for_seller, against_seller)],
-			'receiver': ['in', (for_seller, against_seller)],
+			'sender': ['in', hub_users],
 			'reference_hub_item': against_item,
 		}, limit=limit, order_by=order_by)
+
+	for message in messages:
+		hub_user = list(filter(lambda x: x.name == message.sender, hub_user_details))[0]
+		message.sender_name = hub_user.first_name
 
 	return messages
 
 @frappe.whitelist()
-def get_buying_items_for_messages(hub_seller=None):
-	if not hub_seller:
-		hub_seller = frappe.session.user
+def get_buying_items_for_messages():
+	hub_user = frappe.session.user
+	hub_seller = get_hub_seller_of_user(hub_user)
 
-	validate_session_user(hub_seller)
-
-	items = frappe.db.get_all('Hub Seller Message',
+	items = frappe.db.get_all('Hub Chat Message',
 		fields='reference_hub_item',
 		filters={
-			'sender': hub_seller,
 			'reference_hub_seller': ('!=', hub_seller)
 		},
 		group_by='reference_hub_item'
@@ -388,9 +396,7 @@ def get_buying_items_for_messages(hub_seller=None):
 
 	item_names = [item.reference_hub_item for item in items]
 
-	items = get_items(filters={
-		'name': ['in', item_names]
-	})
+	items = get_items(filters={ 'name': ['in', item_names] })
 
 	for item in items:
 		item['recent_message'] = get_recent_message(item)
@@ -398,17 +404,14 @@ def get_buying_items_for_messages(hub_seller=None):
 	return items
 
 @frappe.whitelist()
-def get_selling_items_for_messages(hub_seller=None):
-	# TODO: Refactor (get_all calls seems redundant)
-	if not hub_seller:
-		hub_seller = frappe.session.user
+def get_selling_items_for_messages():
+	hub_user = frappe.session.user
+	hub_seller = get_hub_seller_of_user(hub_user)
 
-	validate_session_user(hub_seller)
-
-	items = frappe.db.get_all('Hub Seller Message',
+	items = frappe.db.get_all('Hub Chat Message',
 		fields='reference_hub_item',
 		filters={
-			'receiver': hub_seller,
+			'reference_hub_seller': hub_seller
 		},
 		group_by='reference_hub_item'
 	)
@@ -420,30 +423,28 @@ def get_selling_items_for_messages(hub_seller=None):
 	})
 
 	for item in items:
-		item.received_messages = frappe.get_all('Hub Seller Message',
-			fields=['sender', 'receiver', 'content', 'creation'],
+		item.received_messages = frappe.get_all('Hub Chat Message',
+			fields=['sender', 'message', 'creation', 'hub_item_belongs_to_sender'],
 			filters={
-				'receiver': hub_seller,
 				'reference_hub_item': item.name
 			}, distinct=True, order_by='creation DESC')
 
-		for message in item.received_messages:
-			buyer_email = message.sender if message.sender != hub_seller else message.receiver
-			message.buyer_email = buyer_email
-			message.buyer = frappe.db.get_value('Hub Seller', buyer_email, 'company')
+		# for message in item.received_messages:
+		# 	buyer_email = message.sender if message.hub_item_belongs_to_sender else message.receiver
+		# 	message.buyer_email = buyer_email
+		# 	message.buyer = frappe.db.get_value('Hub Seller', buyer_email, ['name', 'company'])
 
 	return items
 
 
 @frappe.whitelist()
-def send_message(from_seller, to_seller, message, hub_item):
-	validate_session_user(from_seller)
+def send_message(message, hub_item):
+	hub_user = frappe.session.user
 
 	msg = frappe.get_doc({
-		'doctype': 'Hub Seller Message',
-		'sender': from_seller,
-		'receiver': to_seller,
-		'content': message,
+		'doctype': 'Hub Chat Message',
+		'sender': hub_user,
+		'message': message,
 		'reference_hub_item': hub_item
 	}).insert(ignore_permissions=True)
 
@@ -456,6 +457,9 @@ def validate_session_user(user):
 		frappe.throw(_('Not Permitted'), frappe.PermissionError)
 
 def get_recent_message(item):
-	message = get_messages(item.hub_seller, item.hub_item_name, limit=1, order_by='creation desc')
+	message = get_messages(item.hub_item_name, limit=1, order_by='creation desc')
 	message_object = message[0] if message else {}
 	return message_object
+
+def get_hub_seller_of_user(hub_user):
+	return frappe.db.get_value('Hub User', hub_user, 'hub_seller')
