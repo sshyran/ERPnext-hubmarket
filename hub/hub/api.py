@@ -71,17 +71,23 @@ def add_hub_seller(company_details):
 def add_hub_user(user_email, hub_seller, first_name, last_name=None):
 	password = random_string(16)
 
-	user = frappe.get_doc({
-		'doctype': 'User',
-		'email': user_email,
-		'first_name': first_name,
-		'last_name': last_name,
-		'new_password': password
-	})
+	try:
+		user = frappe.get_doc({
+			'doctype': 'User',
+			'email': user_email,
+			'first_name': first_name,
+			'last_name': last_name,
+			'new_password': password
+		})
 
-	user.append_roles('System Manager', 'Hub User', 'Hub Buyer')
-	user.flags.delay_emails = True
-	user.insert(ignore_permissions=True)
+		user.append_roles('System Manager', 'Hub User', 'Hub Buyer')
+		user.flags.delay_emails = True
+		user.insert(ignore_permissions=True)
+	except frappe.DuplicateEntryError:
+		user = frappe.get_doc('User', user_email)
+		user.append_roles('System Manager', 'Hub User', 'Hub Buyer')
+		user.new_password = password
+		user.save()
 
 	hub_user = frappe.get_doc({
 		'doctype': 'Hub User',
