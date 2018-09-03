@@ -87,7 +87,7 @@ def add_hub_user(user_email, hub_seller, first_name, last_name=None):
 		user = frappe.get_doc('User', user_email)
 		user.append_roles('System Manager', 'Hub User', 'Hub Buyer')
 		user.new_password = password
-		user.save()
+		user.save(ignore_permissions=True)
 
 	hub_user = frappe.get_doc({
 		'doctype': 'Hub User',
@@ -455,6 +455,10 @@ def send_message(message, hub_item):
 	}).insert(ignore_permissions=True)
 
 	return msg
+
+@frappe.whitelist(allow_guest=True)
+def ping():
+	return frappe.session.user
 
 def validate_session_user(user):
 	if frappe.session.user == 'Administrator':
