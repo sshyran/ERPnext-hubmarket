@@ -2,3 +2,4 @@ hub.patches.v0_0_1.move_seller_info_to_hub_seller
 hub.patches.v0_0_1.set_keywords_for_hub_item_if_missing
 hub.patches.v0_0_1.move_name_to_old_name_and_set_random_string_to_name
 hub.patches.v0_0_1.update_hub_seller_name
+hub.patches.v0_0_1.save_remote_image_locally_and_unset_if_invalid

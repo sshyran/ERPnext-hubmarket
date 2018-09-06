@@ -58,6 +58,9 @@ class HubItem(WebsiteGenerator):
 			image_file = save_remote_file_locally(self.image, self.doctype, self.name)
 			if image_file:
 				self.image = image_file.file_url
+			else:
+				# unset image if it is broken
+				self.image = ''
 
 	def get_context(self, context):
 		context.no_cache = True

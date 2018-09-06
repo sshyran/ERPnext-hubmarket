@@ -472,7 +472,7 @@ def validate_session_user(user):
 		frappe.throw(_('Not Permitted'), frappe.PermissionError)
 
 def get_recent_message(item):
-	message = get_messages(item.hub_item_name, limit=1, order_by='creation desc')
+	message = get_messages(item.name, limit=1, order_by='creation desc')
 	message_object = message[0] if message else {}
 	return message_object
 
