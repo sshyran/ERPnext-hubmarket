@@ -15,29 +15,20 @@ class Curation(object):
 
 	def get_data_for_homepage(self):
 		items_by_country = self.get_items_by_country()
-		items_with_images = self.get_items_with_images()
 		random_items = self.get_random_items_from_each_hub_seller()
 		category_items = self.get_items_from_all_categories()
 
 		return dict(
 			items_by_country=items_by_country,
-			items_with_images=items_with_images,
 			random_items=random_items,
 			category_items=category_items
 		)
-
-
-	def get_items_with_images(self):
-		return self.get_items(filters={
-			'image': ['like', 'http%']
-		}, limit=8)
-
 
 	def get_items_by_country(self):
 		if not self.country: return []
 
 		return self.get_items(filters={
-			'country': ['like', '%' + self.country + '%']
+			'keywords': ['like', '%' + self.country + '%']
 		}, limit=8)
 
 
@@ -50,20 +41,28 @@ class Curation(object):
 
 
 	def get_random_items_from_each_hub_seller(self):
-		res = frappe.db.sql('''
-			SELECT * FROM (
-				SELECT
-					h.name AS hub_seller_name, h.name, i.name AS hub_item_name, i.item_name
-				FROM `tabHub Seller` h
-				INNER JOIN `tabHub Item` i ON h.name = i.hub_seller
-				ORDER BY RAND()
-			) AS shuffled_items
-			GROUP BY hub_seller_name;
-		''', as_dict=True)
+		hub_sellers = [d.name for d in frappe.db.get_all('Hub Seller')]
 
-		hub_item_names = [r.hub_item_name for r in res]
+		query_parts = []
+		fields_str = ', '.join(self.fields)
 
-		return self.get_items(filters={ 'name': ['in', hub_item_names] })
+		for i, hub_seller in enumerate(hub_sellers):
+			query_parts.append('''
+				SELECT * FROM (
+					SELECT {fields}
+					FROM `tabHub Item`
+					WHERE hub_seller='{hub_seller}'
+					AND published = 1
+					ORDER BY RAND()
+					LIMIT {no_of_items_per_seller}
+				) as t{index}
+			'''.format(hub_seller=hub_seller, index=i, fields=fields_str, no_of_items_per_seller=2))
+
+		query = ' UNION '.join(query_parts)
+
+		items = frappe.db.sql(query, as_dict=True)
+
+		return self.post_process_item_details(items)
 
 
 	def get_items_by_category(self, category):
@@ -81,7 +80,7 @@ class Curation(object):
 		if filters:
 			base_filters.update(filters)
 
-		items = frappe.get_all('Hub Item', fields=self.fields, filters=filters, limit=limit)
+		items = frappe.get_all('Hub Item', fields=self.fields, filters=base_filters, limit=limit)
 
 		return self.post_process_item_details(items)
 
