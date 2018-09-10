@@ -1,25 +1,21 @@
 {% extends "templates/web.html" %}
 
-{% block title %}Hub Market{% endblock %}
+{% block title %}Marketplace{% endblock %}
 
-{% block page_content %}
+{% block content %}
+<link rel="stylesheet" href="/assets/css/marketplace.css">
+<style>
+    .layout-side-section {
+        font-size: 12px;
+    }
+</style>
 
-<section class='top-section after-splash'>
-    <div class="container">
-        <h1>Hub Market</h1>
-        <p class='lead'>Discover products</p>
+<section class="row marketplace-container">
+    <div class="layout-side-section col-md-2">
     </div>
+    <main class="layout-main-section col-md-10">
+    </main>
 </section>
-<section>
-    <div class="container">
-        <div class="text-center">
-            <h2>Items</h2>
-        </div>
-        {% for doc in items %}
-            {% include 'hub/doctype/hub_item/templates/hub_item_row.html'  %}
-        {% endfor %}
-        </div>
-	</div>
-</section>
-
+<script defer src="/assets/js/control.min.js"></script>
+<script defer src="/assets/js/marketplace-deps.min.js"></script>
 {% endblock %}

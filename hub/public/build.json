@@ -1,0 +1,5 @@
+{
+    "js/marketplace-deps.min.js": [
+        "public/js/marketplace-deps.js"
+    ]
+}

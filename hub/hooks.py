@@ -24,7 +24,7 @@ web_include_css = "/assets/hub/css/hub.css"
 
 website_context = {
 	# "navbar_search": 1,
-	"brand_html": "<img class='navbar-icon' src='/assets/hub/img/hub-logo.png' /><span>Hub Market</span>",
+	"brand_html": "<img class='navbar-icon' src='/assets/erpnext/images/erpnext-logo.jpg' /><span>Marketplace</span>",
 	"copyright": "Hub Market",
 	"footer_address": "<br>Discover products",
 	"hide_login": 1,
