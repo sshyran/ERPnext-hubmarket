@@ -8,7 +8,7 @@ import json
 from frappe import _
 from frappe.utils import random_string
 from six import string_types
-from urlparse import urljoin
+from six.moves.urllib.parse import urljoin
 
 from .curation import Curation
 from .utils import save_remote_file_locally
