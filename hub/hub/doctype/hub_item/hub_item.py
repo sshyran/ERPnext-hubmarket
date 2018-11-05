@@ -20,12 +20,13 @@ class HubItem(WebsiteGenerator):
 		super(HubItem, self).autoname()
 		self.name = self.name[:name_length] + '-' + frappe.generate_hash(self.doctype, hash_length)
 
-	def validate(self):
+	def before_insert(self):
 		seller_item_count = frappe.db.count("Hub Item", {"hub_seller": self.hub_seller, "published": 1})
 
 		if seller_item_count >= MAX_SELLER_ITEM_COUNT:
 			frappe.throw('Max allowed items for seller {seller} exceeded.'.format(seller=self.hub_seller))
 
+	def validate(self):
 		if not self.route:
 			self.route = 'items/' + self.name
 
