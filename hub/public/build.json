@@ -1,5 +1,8 @@
 {
     "js/marketplace-deps.min.js": [
         "public/js/marketplace-deps.js"
+    ],
+    "css/marketplace-web.css": [
+        "public/less/marketplace-web.less"
     ]
 }
