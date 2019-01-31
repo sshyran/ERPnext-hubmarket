@@ -11,7 +11,10 @@ from six import string_types
 from six.moves.urllib.parse import urljoin
 
 from .curation import Curation
-from .utils import save_remote_file_locally
+from .utils import (
+	save_remote_file_locally,
+	check_user_and_item_belong_to_sale_seller
+)
 
 from .log import (
 	add_log,
@@ -339,6 +342,44 @@ def get_saved_items_of_user():
 
 	return get_items(filters={'name': ['in', saved_item_names]})
 
+# Featured Items
+
+@frappe.whitelist()
+def add_item_to_seller_featured_items(hub_item_name):
+	hub_user = frappe.session.user
+	item_hub_seller_name = frappe.db.get_value('Hub Item', hub_item_name, fieldname=['hub_seller'])
+
+	check_user_and_item_belong_to_sale_seller(hub_user,hub_item_name)
+	
+	# validation: max 8 featured items per seller
+	if frappe.db.count('Hub Item' ,{'hub_seller':item_hub_seller_name,'featured_item':1}) >= 8:
+		frappe.throw(_("You already have 8 featured items. You can feature only 8 items."))
+	
+	log = add_log('Hub Feature Item', hub_item_name, hub_user, 1)
+	frappe.db.set_value("Hub Item", hub_item_name, "featured_item", 1)
+	return log
+
+
+@frappe.whitelist()
+def remove_item_from_seller_featured_items(hub_item_name):
+	hub_user = frappe.session.user
+
+	check_user_and_item_belong_to_sale_seller(hub_user,hub_item_name)
+
+	log = add_log('Hub Feature Item', hub_item_name, hub_user, 0)
+	frappe.db.set_value("Hub Item", hub_item_name, "featured_item", 0)
+	return log
+
+
+@frappe.whitelist()
+def get_featured_items_of_seller():
+	hub_user = frappe.session.user
+	user_hub_seller_name = frappe.db.get_value('Hub User', hub_user, fieldname=['hub_seller'])
+
+	return get_items(filters={
+		'hub_seller': user_hub_seller_name,
+		'featured_item':1
+	})
 
 @frappe.whitelist()
 def get_sellers_with_interactions(for_seller):
