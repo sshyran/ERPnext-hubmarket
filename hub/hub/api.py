@@ -213,11 +213,11 @@ def post_items_publish():
 
 
 @frappe.whitelist(allow_guest=True)
-def get_hub_seller_page_info(hub_seller='', company=''):
+def get_hub_seller_page_info(hub_seller=None, company=None):
 	if not hub_seller and company:
 		hub_seller = frappe.db.get_all(
 			"Hub Seller", filters={'company': company})[0].name
-	else:
+	elif not hub_seller:
 		frappe.throw('No Seller or Company Name received.')
 
 	items_by_seller = Curation().get_items(filters={
