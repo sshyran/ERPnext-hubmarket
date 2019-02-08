@@ -45,7 +45,7 @@ def save_remote_file_locally(file_url, doctype, name):
 
 	return f
 
-def check_user_and_item_belong_to_sale_seller(hub_user,hub_item_name):
+def check_user_and_item_belong_to_same_seller(hub_user,hub_item_name):
 	'''
 	Check if item and user belong to same seller.
 	'''
