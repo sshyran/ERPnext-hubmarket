@@ -86,14 +86,17 @@ def add_hub_user(user_email, hub_seller, first_name, last_name=None):
 		user.new_password = password
 		user.save(ignore_permissions=True)
 
-	hub_user = frappe.get_doc({
-		'doctype': 'Hub User',
-		'hub_seller': hub_seller,
-		'user_email': user_email,
-		'first_name': first_name,
-		'last_name': last_name,
-		'user': user.name
-	}).insert(ignore_permissions=True)
+	try:
+		hub_user = frappe.get_doc({
+			'doctype': 'Hub User',
+			'hub_seller': hub_seller,
+			'user_email': user_email,
+			'first_name': first_name,
+			'last_name': last_name,
+			'user': user.name
+		}).insert(ignore_permissions=True)
+	except frappe.DuplicateEntryError:
+		hub_user = frappe.get_doc('Hub User', user.name)
 
 	return {
 		'user_email': user_email,
