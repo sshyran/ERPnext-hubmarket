@@ -10,3 +10,4 @@ locale
 dist/
 build/
 hub/docs/current
+__pycache__/
