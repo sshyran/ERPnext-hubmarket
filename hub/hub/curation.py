@@ -51,12 +51,12 @@ class Curation(object):
 				SELECT * FROM (
 					SELECT {fields}
 					FROM `tabHub Item`
-					WHERE hub_seller='{hub_seller}'
+					WHERE hub_seller={hub_seller}
 					AND published = 1
 					ORDER BY RAND()
 					LIMIT {no_of_items_per_seller}
 				) as t{index}
-			'''.format(hub_seller=hub_seller, index=i, fields=fields_str, no_of_items_per_seller=2))
+			'''.format(hub_seller=frappe.db.escape(hub_seller), index=i, fields=fields_str, no_of_items_per_seller=2))
 
 		query = ' UNION '.join(query_parts)
 
