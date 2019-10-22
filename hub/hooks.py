@@ -19,11 +19,18 @@ app_license = "MIT"
 # app_include_js = "/assets/hub/js/hub.js"
 
 # include js, css files in header of web template
-web_include_css = "/assets/css/marketplace-web.css"
+# web_include_css = "/assets/css/marketplace-web.css"
 # web_include_js = "/assets/hub/js/hub.js"
 
+web_include_css = [
+	"assets/css/desk.min.css",
+	"assets/css/marketplace-web.css",
+]
+
 website_context = {
-	"brand_html": "<img class='navbar-icon' src='/assets/erpnext/images/erpnext-logo.jpg' /><span>Marketplace</span>",
+	"logo_image_url": '/assets/hub/images/hub-logo.png',
+	"brand_name": "Marketplace",
+	"brand_html": "Marketplace",
 	"copyright": "ERPNext Foundation",
 	"footer_address": "<br> <a href='https://erpnext.org'>https://erpnext.org</a>",
 	"hide_login": 1,
