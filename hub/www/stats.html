@@ -1,0 +1,70 @@
+{% extends "templates/web.html" %}
+{% block title %}Stats{% endblock %}
+
+
+
+{% macro card(title, body, percent_change) %}
+
+<div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 col-12">
+	<div class="card">
+		<div class="card-body" id= "{{ title }}">
+			<h5 class="text-muted">{{ title }}</h5>
+			<div class="metric-value d-inline-block">
+				<h1 class="mb-1">{{ body }}</h1>
+			</div>
+		</div>
+	</div>
+</div>
+{% endmacro %}
+
+
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light subnav">
+	<div class="container">
+		<span class='subnav-title'> Statistics</span>
+	</div>
+</nav>
+
+
+<div class="container">
+	<div class="row  justify-content-center">
+		{{ card('Total Product Views', visitors.get('count'), '5') }}
+		{{ card('Products', products.get('count'), '') }}
+		{{ card('Users', users.get('count'), '') }}
+		{{ card('Communications', communications.get('count'), '') }}
+	</div>
+
+	<div class="row">
+		<div class="col-xl-12 col-lg-12 col-md-6 col-sm-12 col-12">
+				<div class="card">
+					<span class="card-header">
+							<h5 style="float: left">{{ chart_title }}</h5>
+							<div class="btn-group btn-group-toggle" data-toggle="buttons" style="float: right">
+								<label class="btn btn-sm btn-period active">
+									<input type="radio" name="period" id="yearly" checked> Yearly
+								</label>
+								<label class="btn btn-sm btn-period active">
+									<input type="radio" name="period" id="monthly"> Monthly
+								</label>
+								<label class="btn btn-sm btn-period">
+									<input type="radio" name="period" id="weekly"> Weekly
+								</label>
+							</div>
+						</span>
+					<div class="card-body p-0">
+		
+		<div id="chart"></div>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src='assets/js/marketplace-deps.min.js'></script>
+<script src='assets/js/charts.min.js'></script>
+
+{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="/assets/css/stats.css">
+{% endblock %}
