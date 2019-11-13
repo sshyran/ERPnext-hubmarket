@@ -7,8 +7,6 @@ function ready() {
     $('body').attr('data-route', 'marketplace');
 
     frappe.require('/assets/js/marketplace.min.js', () => {
-        console.log('ready asdf');
-
         erpnext.hub.marketplace = new erpnext.hub.Marketplace({
             parent: $('.marketplace-container')
         });
