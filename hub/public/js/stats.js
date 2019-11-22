@@ -6,14 +6,25 @@ class Stats {
 	}
 
 	refresh() {
+		this.check_active_period();
 		this.render_chart();
+	}
+
+	check_active_period() {
+		let me = this;
+		$(".btn-group > .btn").click(function(){
+			let interval = $(this).find('input').attr('id');
+			me.time_interval = interval.charAt(0).toUpperCase() + interval.slice(1);
+			me.timespan = me.time_interval==='Yearly' ? 'All Time': 'Last Year';
+			me.render_chart();
+		});
 	}
 
 	render_chart() {
 		this.chart_filters = {'type': 'Hub Item View'};
 		this.chart_config = {
-			timespan: 'Last Year',
-			time_interval: 'Monthly',
+			timespan: this.timespan,
+			time_interval: this.time_interval,
 			type: 'Line',
 			value_based_on: 'name',
 			chart_type: 'Count',
