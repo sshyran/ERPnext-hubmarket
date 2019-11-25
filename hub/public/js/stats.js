@@ -2,6 +2,7 @@ class Stats {
 	constructor(wrapper) {
 		this.wrapper = wrapper;
 		this.time_interval = "Weekly";
+		this.timespan = "Last Year";
 		this.refresh();
 	}
 
