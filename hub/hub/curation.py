@@ -80,11 +80,11 @@ class Curation(object):
 		if filters:
 			base_filters.update(filters)
 
-		items = frappe.get_all('Hub Item', fields=self.fields, filters=base_filters, order_by=order_by, limit=limit, debug=1)
+		items = frappe.get_all('Hub Item', fields=self.fields, filters=base_filters, order_by=order_by, limit=limit)
 
 		return self.post_process_item_details(items)
 
-	def get_items_sorted_by_views(self, filters=None, limit=20, sort_key='desc'):
+	def get_items_sorted_by_views(self, filters=None, limit=20, sort_order='desc'):
 		base_filters = {
 			'published': 1
 		}
@@ -103,9 +103,9 @@ class Curation(object):
 				WHERE
 					{conditions}
 					AND `tabHub Item`.name = item_views.reference_hub_item
-				ORDER BY item_views.view_count {sort_key}
+				ORDER BY item_views.view_count {sort_order}
 				LIMIT {limit}
-				""".format(conditions=conditions if conditions else "1=1", sort_key=sort_key, limit=int(limit)), values, as_dict=True, debug=1)
+				""".format(conditions=conditions if conditions else "1=1", sort_order=sort_order, limit=int(limit)), values, as_dict=True)
 		return self.post_process_item_details(items)
 
 	def post_process_item_details(self, items):
