@@ -141,7 +141,7 @@ def get_data_for_homepage(country=None):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_items(keyword='', hub_seller=None, company=None, filters={}, order_by=None, limit=None, based_on=None, sort_order='desc'):
+def get_items(keyword='', hub_seller=None, company=None, filters={}, order_by=None, limit=None, sort_field=None, sort_order='desc'):
 	'''
 	Get items by matching it with the keywords field
 	'''
@@ -159,10 +159,10 @@ def get_items(keyword='', hub_seller=None, company=None, filters={}, order_by=No
 	if hub_seller:
 		filters["hub_seller"] = hub_seller
 
-	if based_on == 'view count':
+	if sort_field == 'view count':
 		return c.get_items_sorted_by_views(filters=filters, limit=50, sort_order=sort_order)
 	else:
-		order_by = based_on +' '+ sort_order
+		order_by = sort_field +' '+ sort_order
 		return c.get_items(filters=filters, order_by=order_by, limit=limit)
 
 @frappe.whitelist()
