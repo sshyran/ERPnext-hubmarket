@@ -1,3 +1,5 @@
+import { Chart } from "frappe-charts"
+
 class Stats {
 	constructor(wrapper) {
 		this.wrapper = wrapper;
@@ -34,7 +36,7 @@ class Stats {
 			width: 'half',
 			based_on: 'creation'
 		};
-		this.chart = new frappe.Chart( '#chart', {
+		this.chart = new Chart( '#chart', {
 			title: ' ',
 			type: 'line',
 			height: 300,

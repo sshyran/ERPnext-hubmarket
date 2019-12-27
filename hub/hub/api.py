@@ -141,7 +141,7 @@ def get_data_for_homepage(country=None):
 
 
 @frappe.whitelist(allow_guest=True)
-def get_items(keyword='', hub_seller=None, company=None, filters={}):
+def get_items(keyword='', hub_seller=None, company=None, filters={}, order_by=None, limit=None, sort_field=None, sort_order='desc'):
 	'''
 	Get items by matching it with the keywords field
 	'''
@@ -159,8 +159,11 @@ def get_items(keyword='', hub_seller=None, company=None, filters={}):
 	if hub_seller:
 		filters["hub_seller"] = hub_seller
 
-	return c.get_items(filters=filters)
-
+	if sort_field == 'view count':
+		return c.get_items_sorted_by_views(filters=filters, limit=50, sort_order=sort_order)
+	else:
+		order_by = sort_field +' '+ sort_order
+		return c.get_items(filters=filters, order_by=order_by, limit=limit)
 
 @frappe.whitelist()
 def pre_items_publish(intended_item_publish_count):
@@ -214,6 +217,21 @@ def post_items_publish():
 
 	return log
 
+@frappe.whitelist()
+def unpublish_item(hub_item_name):
+	''' un-publish item from hub and create a log for the same '''
+
+	hub_user = frappe.session.user
+	frappe.set_value('Hub Item', hub_item_name, 'published', 0)
+
+	log = add_log(
+		log_type = 'Hub Seller Unpublish',
+		hub_user = hub_user,
+		data = {
+			'item_status': 'Item has been unpublished from the hub'
+		}
+	)
+	return log
 
 @frappe.whitelist(allow_guest=True)
 def get_hub_seller_page_info(hub_seller=None, company=None):
