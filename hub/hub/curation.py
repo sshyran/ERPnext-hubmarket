@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import frappe
 
 class Curation(object):
-	fields = ['name', 'item_name', 'image', 'description', 'creation', 'hub_seller']
+	fields = ['name', 'item_name', 'image', 'description', 'creation', 'hub_seller', 'item_code']
 
 
 	def __init__(self, hub_seller=None, country=None):

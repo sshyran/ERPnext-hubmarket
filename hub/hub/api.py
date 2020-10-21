@@ -162,7 +162,9 @@ def get_items(keyword='', hub_seller=None, company=None, filters={}, order_by=No
 	if sort_field == 'view count':
 		return c.get_items_sorted_by_views(filters=filters, limit=50, sort_order=sort_order)
 	else:
-		order_by = sort_field +' '+ sort_order
+		if sort_field:
+			order_by = sort_field +' '+ sort_order
+
 		return c.get_items(filters=filters, order_by=order_by, limit=limit)
 
 @frappe.whitelist()
